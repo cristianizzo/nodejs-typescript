@@ -1,0 +1,20 @@
+[
+  {
+    "model": "UserRole",
+    "data": {
+      "id": "ADMIN"
+    }
+  },
+  {
+    "model": "UserRole",
+    "data": {
+      "id": "FULL_ACCESS"
+    }
+  },
+  {
+    "model": "UserRole",
+    "data": {
+      "id": "AGREEMENT_BASED"
+    }
+  }
+]
