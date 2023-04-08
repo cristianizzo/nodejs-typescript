@@ -1,6 +1,6 @@
-import Utils from '../helpers/utils';
-import {IService} from "../types/system/service";
-import {IServiceEvent} from "../types/system/serviceEvent";
+import Utils from '@helpers/utils';
+import { IService } from '../types/system/service';
+import { IServiceEvent } from '../types/system/serviceEvent';
 
 const APIService: IService = {
   NEED_CONNECTIONS: ['postgres'],
@@ -10,7 +10,7 @@ const APIService: IService = {
     return Promise.resolve(event);
   },
 
-  stop: Utils.noop,
+  stop: Utils.noop
 };
 
 export default APIService;

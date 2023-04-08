@@ -1,4 +1,5 @@
-import Decimal from 'decimal.js'
+import Decimal from 'decimal.js';
+import axios from 'axios';
 
 const Utils = {
   noop: (): number => 0,
@@ -16,7 +17,7 @@ const Utils = {
   },
 
   configParser(
-    configSource = process.env,
+    configSource: any = process.env,
     type: 'string' | 'array' | 'number' | 'bool',
     key: string,
     defaultValue?: any
@@ -63,7 +64,7 @@ const Utils = {
     const cache: any[] = [];
     return JSON.stringify(
       object,
-      function (key, value) {
+      function(key, value) {
         if (typeof value === 'object' && value !== null) {
           if (cache.indexOf(value) !== -1) {
             return;
@@ -114,15 +115,13 @@ const Utils = {
   removeEmptyStrings(data: Record<string, string>): Record<string, string> {
     return Object.keys(data).reduce((acc, prop) => {
       if (data[prop] !== '' && data[prop] !== undefined) {
-        return Object.assign(acc, {[prop]: data[prop]});
+        return Object.assign(acc, { [prop]: data[prop] });
       }
       return acc;
     }, {} as Record<string, string>);
   },
 
-  capitalizeFirstLetter(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-}
+  axios
+};
 
 export default Utils;

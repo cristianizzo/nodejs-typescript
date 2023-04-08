@@ -1,47 +1,42 @@
-import winston from 'winston';
-import config from '../../../config';
-import ExternalLogger from './external';
-import Formats from './format';
+import * as winston from 'winston';
+import ExternalLogger from '@modules/logger/external';
+import config from '@config';
+import Formats from '@modules/logger/format';
+import Utils from '@helpers/utils';
 
 const format = winston.format.combine(...[Formats.formatError(), winston.format.timestamp(), Formats.formatMachine()]);
 
-const externalLogger = new ExternalLogger({
+const externalLogger: any = new ExternalLogger({
   name: 'external-logger',
-  level: 'verbose',
+  level: 'verbose'
 });
 
 const consoleFormat = winston.format.combine(...[
   winston.format.colorize(),
-  Formats.consoleFormat({showDetails: true})
+  Formats.consoleFormat({ showDetails: true })
 ].filter((f) => f !== null));
 
 const consoleLogLevel = config.REMOTE_EXECUTION ? 'warn' : config.LOG.LEVEL;
 const consoleLogger = new winston.transports.Console({
-  // name: 'console',
   format: consoleFormat,
-  level: consoleLogLevel,
+  level: consoleLogLevel
 });
 
 const transports = [externalLogger, consoleLogger];
 
-const CustomLoggerMixin = {
-  logMeta(...metas: object[]) {
-    logger.defaultMeta = Object.assign({}, ...metas);
-  },
+const logger: any = winston.createLogger({
+  level: 'debug',
+  exitOnError: true,
+  format,
+  transports
+});
 
-  purge() {
-    externalLogger.purge();
-  }
+logger.purge = () => {
+  externalLogger.purge();
 };
 
-const logger = Object.assign(
-  winston.createLogger({
-    level: 'debug',
-    exitOnError: true,
-    format,
-    transports
-  }),
-  CustomLoggerMixin
-);
+logger.logMeta = (...metas: object[]) => Object.assign({}, ...metas);
+
+Utils.defaultError = (error) => logger.error(error.message, { error });
 
 export default logger;

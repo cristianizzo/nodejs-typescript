@@ -1,8 +1,8 @@
-import Transport from 'winston-transport';
-import logzioNodejs from 'logzio-nodejs';
+import * as Transport from 'winston-transport';
+import * as logNodejs from 'logzio-nodejs';
 import * as Sentry from '@sentry/node';
-import Format from './format';
-import config from '../../../config';
+import Format from '@modules/logger/format';
+import config from '@config';
 
 interface ExternalLoggerOptions extends Transport.TransportStreamOptions {
   name?: string;
@@ -17,11 +17,11 @@ class ExternalLogger extends Transport {
     super(opts);
 
     if (config.LOG.LOGZIO_KEY) {
-      this.logzioLogger = logzioNodejs.createLogger({
+      this.logzioLogger = logNodejs.createLogger({
         token: config.LOG.LOGZIO_KEY,
         host: config.LOG.LOGZIO_HOST,
         type: config.LOG.LOGZIO_SERVER_NAME,
-        protocol: 'https',
+        protocol: 'https'
       });
     }
 
@@ -30,7 +30,7 @@ class ExternalLogger extends Transport {
       this.sentry.init({
         dsn: config.LOG.SENTRY_DSN,
         serverName: config.LOG.LOGZIO_SERVER_NAME,
-        environment: config.ENVIRONMENT,
+        environment: config.ENVIRONMENT
       });
     }
   }

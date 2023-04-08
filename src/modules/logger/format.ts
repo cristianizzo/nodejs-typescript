@@ -1,7 +1,7 @@
-import os from 'os';
-import winston from 'winston';
-import config from '../../../config';
-import Utils from '../../helpers/utils';
+import * as os from 'os';
+import * as winston from 'winston';
+import config from '@config';
+import Utils from '@helpers/utils';
 import * as process from 'process';
 
 const LEVEL = Symbol.for('level');
@@ -31,7 +31,7 @@ const Format: LogFormat = {
     const newInfo: any = {
       level: info.level,
       message: info.message,
-      machine: info.machine,
+      machine: info.machine
     };
 
     if (nbinfo) {
@@ -49,7 +49,7 @@ const Format: LogFormat = {
     info.machine = {
       hostname: os.hostname(),
       platform: process.platform,
-      pid: process.pid,
+      pid: process.pid
     };
 
     info.environment = config.ENVIRONMENT;
@@ -95,7 +95,7 @@ const Format: LogFormat = {
 
     info[MESSAGE] = `${info.timestamp} [${info.level}] ${info.message}${detailString}`;
     return info;
-  }),
+  })
 };
 
 export default Format;

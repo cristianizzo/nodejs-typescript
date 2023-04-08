@@ -1,8 +1,8 @@
-import parser from 'ua-parser-js';
-import logger from '../modules/logger';
-import {assert} from './errors';
+import * as parser from 'ua-parser-js';
+import logger from '@logger';
+import { assert } from '@errors';
 
-const llo = logger.logMeta.bind(null, {service: 'helpers:DeviceInfoMapper'});
+const llo = logger.logMeta.bind(null, { service: 'helpers:DeviceInfoMapper' });
 
 interface IDeviceInfo {
   type: string;
@@ -22,11 +22,11 @@ const DeviceInfoMapper = {
    *   ua: string,
    * }}
    */
-  getDeviceInfo(userAgent: string): IDeviceInfo {
+  getDeviceInfo(userAgent?: string): IDeviceInfo {
     const info: IDeviceInfo = {} as IDeviceInfo;
 
     try {
-      assert(!!(userAgent), 'userAgent empty', {userAgent});
+      assert(!!(userAgent), 'userAgent empty', { userAgent });
       const data: any = parser(userAgent);
 
       info.ua = data.ua;
@@ -41,11 +41,11 @@ const DeviceInfoMapper = {
       }
 
     } catch (error) {
-      logger.error('Impossible to get device info', llo({error}));
+      logger.error('Impossible to get device info', llo({ error }));
     }
 
     return info;
-  },
+  }
 };
 
 export default DeviceInfoMapper;

@@ -1,8 +1,9 @@
-import Utils from '../helpers/utils';
-import logger from './logger';
-import DB from './db';
+import Utils from '@helpers/utils';
+import logger from '@logger';
+import Postgres from '@modules/postgres';
+import MongoDB from '@modules/mongo';
 
-const llo = logger.logMeta.bind(null, {service: 'connection'});
+const llo = logger.logMeta.bind(null, { service: 'connection' });
 
 interface Connections {
   openedConnections: string[];
@@ -22,7 +23,11 @@ const Connections: Connections = {
 
         switch (connection) {
           case 'postgres': {
-            await DB.connect();
+            await Postgres.connect();
+            return true;
+          }
+          case 'mongodb': {
+            await MongoDB.connect();
             return true;
           }
           default: {
@@ -41,7 +46,7 @@ const Connections: Connections = {
       })
       .catch((error) => {
         Connections.openedConnections.pop();
-        logger.warn('Unable to open connections', {error});
+        logger.warn('Unable to open connections', { error });
         throw error;
       });
   },
@@ -50,7 +55,10 @@ const Connections: Connections = {
     return Utils.asyncForEach(Connections.openedConnections, async (connection: string) => {
       switch (connection) {
         case 'postgres': {
-          return DB.disconnect();
+          return Postgres.disconnect();
+        }
+        case 'mongodb': {
+          return MongoDB.disconnect();
         }
         default: {
           return Promise.reject(new Error('Unknown service to disconnect from'));
@@ -64,10 +72,10 @@ const Connections: Connections = {
         return Utils.wait(500);
       })
       .catch((error) => {
-        logger.error('Unable to close connections', llo({error}));
+        logger.error('Unable to close connections', llo({ error }));
         throw error;
       });
-  },
+  }
 };
 
 export default Connections;

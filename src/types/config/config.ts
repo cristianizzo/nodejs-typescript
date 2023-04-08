@@ -23,10 +23,18 @@ export interface IConfigInterface {
   CIPHER_2FA: string;
   JWT_SECRET: string;
   DEEPLINK_APP: string;
-  DATABASE: {
+  POSTGRES: {
+    NAME: string;
     URI: string;
     SSL: boolean;
     MAX_CONNECTION: number;
+    RETRY_CONCURRENT_TIME: number;
+  }
+  MONGO_DB: {
+    NAME: string;
+    URI: string;
+    DEBUGGER: boolean;
+    RETRY_CONCURRENT_INTERVAL: number;
     RETRY_CONCURRENT_TIME: number;
   }
   AWS_MANAGER: {
@@ -46,20 +54,15 @@ export interface IConfigInterface {
     LOGZIO_KEY: string;
     LOGZIO_SERVER_NAME: string;
   },
-  ELASTIC: {
-    APM_STATUS: boolean;
-    APM_SECRET_TOKEN: string;
-    APM_SERVER_URL: string;
-    APM_DOMAIN: string;
-  },
   MAIL: {
     REPLY_EMAIL: string;
     FROM_EMAIL: string;
+    SENDGRID_ENABLED: boolean;
     SENDGRID_URI: string;
     SENDGRID_API_KEY: string;
   }
   SERVICES: {
-    API: {
+    API_USER: {
       NAME: string;
       PORT: number;
       TIMEOUT: number;

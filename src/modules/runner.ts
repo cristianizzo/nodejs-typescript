@@ -1,11 +1,11 @@
-import '../helpers/monitoring';
-import {IService} from '../types/system/service';
-import logger from "./logger";
-import Connections from "./connections";
+import '@helpers/monitoring';
+import { IService } from '../types/system/service';
+import logger from '@logger';
+import Connections from '@modules/connections';
 
-const llo = logger.logMeta.bind(null, {service: 'runner'})
+const llo = logger.logMeta.bind(null, { service: 'runner' });
 
-let stopping = false
+let stopping = false;
 
 function stopApps(instances: { app: IService, event?: any }[], code: number, timeToKill = 20 * 1000) {
   setTimeout(() => {
@@ -21,7 +21,7 @@ function stopApps(instances: { app: IService, event?: any }[], code: number, tim
   Promise.all(instances.map((instance: { app: IService, event?: any }) => instance.app.stop()))
     .then(() => Connections.close())
     .then(() => process.exit(code)) // eslint-disable-line no-process-exit
-    .catch((error) => logger.error('global error', llo({error})))
+    .catch((error) => logger.error('global error', llo({ error })));
 }
 
 async function runApps(instances: { app: IService, event?: any }[]) {
@@ -31,12 +31,12 @@ async function runApps(instances: { app: IService, event?: any }[]) {
     process.on('SIGTERM', stopApps.bind(null, instances));
 
     process.on('unhandledRejection', (error) => {
-      logger.error('Unhandled Promise Rejection', llo({error}));
+      logger.error('Unhandled Promise Rejection', llo({ error }));
       stopApps(instances, -1);
     });
 
     process.on('uncaughtException', (error) => {
-      logger.error('Unhandled Exception', llo({error}));
+      logger.error('Unhandled Exception', llo({ error }));
       stopApps(instances, -1);
     });
 
@@ -47,11 +47,12 @@ async function runApps(instances: { app: IService, event?: any }[]) {
 
   } catch (error) {
 
-    logger.error('Unable to start application', llo({error}));
+    console.error(error);
+    logger.error('Unable to start application', llo({ error }));
     logger.purge();
 
     setTimeout(() => {
-      process.exit(-1) // eslint-disable-line no-process-exit
+      process.exit(-1); // eslint-disable-line no-process-exit
     }, 1000);
   }
 }
@@ -59,7 +60,7 @@ async function runApps(instances: { app: IService, event?: any }[]) {
 function Runner(apps: { app: IService, event?: any }[]) {
   if (!apps) throw new Error('need app');
 
-  runApps(apps).catch((error) => logger.error('run error', llo({error})));
+  runApps(apps).catch((error) => logger.error('run error', llo({ error })));
 }
 
-export default Runner
+export default Runner;

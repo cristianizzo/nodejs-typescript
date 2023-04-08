@@ -1,4 +1,4 @@
-import {IEnumUserRoleIds} from "../../db/db";
+import { IEnumUserRoleIds } from '../../db/db';
 
 export enum IEnumLoginType {
   email = 'email',
@@ -29,6 +29,7 @@ export interface ILoginRes {
   token: string;
   user: IUserRes;
 }
+
 export interface IAskTwoFactorRes {
   secret: string;
   qrData: string;

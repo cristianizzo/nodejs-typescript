@@ -1,10 +1,10 @@
 import axios from 'axios';
-import config from '../../config/index';
-import logger from '../modules/logger';
-import {assert} from './errors';
-import {IEnumEnvironment} from "../types/config/config";
+import config from '@config';
+import logger from '@logger';
+import { assert } from '@errors';
+import { IEnumEnvironment } from '../types/config/config';
 
-const llo = logger.logMeta.bind(null, {service: 'mail'});
+const llo = logger.logMeta.bind(null, { service: 'mail' });
 
 interface IMailBody {
   template_id: string;
@@ -25,16 +25,11 @@ const Mail = {
 
   async _rpCall(body: IMailBody): Promise<any> {
 
-    const payload: any = {
-      url: config.MAIL.SENDGRID_URI,
+    return axios.post(config.MAIL.SENDGRID_URI, body, {
       headers: {
-        Authorization: `Bearer ${config.MAIL.SENDGRID_API_KEY}`,
-      },
-      data: body,
-      responseType: 'json',
-    };
-
-    return axios(payload);
+        Authorization: `Bearer ${config.MAIL.SENDGRID_API_KEY}`
+      }
+    });
   },
 
   async _send({
@@ -58,21 +53,21 @@ const Mail = {
       content: [
         {
           type: 'text/html',
-          value: '<html lang="en"></html>',
-        },
+          value: '<html lang="en"></html>'
+        }
       ],
       mail_settings: {
         sandbox_mode: {
-          enable: false,
-        },
+          enable: false
+        }
       },
       from: {
         email: config.MAIL.FROM_EMAIL,
-        name: config.APP_NAME,
+        name: config.APP_NAME
       },
       reply_to: {
         email: config.MAIL.REPLY_EMAIL,
-        name: config.APP_NAME,
+        name: config.APP_NAME
       },
       personalizations: [
         {
@@ -80,24 +75,24 @@ const Mail = {
           to: [
             {
               email: toEmail,
-              name: toName,
-            },
+              name: toName
+            }
           ],
           headers: {
             'X-Accept-Language': 'en',
-            'X-Mailer': 'AgreeWe',
+            'X-Mailer': 'AgreeWe'
           },
           dynamic_template_data: Object.assign(
             {
               subject: `${prefix}${subject}`,
               name: toName,
               email: toEmail,
-              env: config.ENVIRONMENT === IEnumEnvironment.prod ? '' : `[${config.ENVIRONMENT}] `,
+              env: config.ENVIRONMENT === IEnumEnvironment.prod ? '' : `[${config.ENVIRONMENT}] `
             },
             dynamicContent
-          ),
-        },
-      ],
+          )
+        }
+      ]
     };
 
     if (attachments != null) {
@@ -107,7 +102,7 @@ const Mail = {
     if (calEvent != null) {
       body.content.push({
         type: 'text/calendar; method=REQUEST',
-        value: calEvent,
+        value: calEvent
       });
     }
 
@@ -126,7 +121,7 @@ const Mail = {
           toEmail,
           toName,
           templateId,
-          dynamicContent,
+          dynamicContent
         })
       );
       return false;
@@ -136,11 +131,15 @@ const Mail = {
   async send(opts: any, logInfo: any = {}): Promise<boolean> {
     assert(opts && opts.toEmail && opts.toName, 'missing_params', {
       opts,
-      logInfo,
+      logInfo
     });
 
-    return Mail._send(opts, logInfo);
-  },
+    if (config.MAIL.SENDGRID_ENABLED) {
+      return Mail._send(opts, logInfo);
+    }
+
+    return Promise.resolve(false);
+  }
 };
 
 export default Mail;

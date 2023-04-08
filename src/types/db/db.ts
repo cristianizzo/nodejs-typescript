@@ -1,13 +1,14 @@
-import {InferAttributes, InferCreationAttributes, Model, ModelCtor} from 'sequelize';
-import {ITxOpts} from "./transaction";
-import {IRequestInfo, IUserAgentInfo} from "../system/requestInfo";
-import {IUserRes} from "../routers/res/user";
-import UserRole from "../../models/pg/userRole";
-import User from "../../models/pg/user";
-import UserNotification from "../../models/pg/userNotification";
-import Token from "../../models/pg/token";
+import { InferAttributes, InferCreationAttributes, Model, ModelCtor } from 'sequelize';
+import { ITxOpts } from './transaction';
+import { IRequestInfo, IUserAgentInfo } from '../system/requestInfo';
+import { IUserRes } from '../routers/res/user';
+import UserRole from '@models/postgres/pg/userRole';
+import User from '@models/postgres/pg/user';
+import UserNotification from '@models/postgres/pg/userNotification';
+import Token from '@models/postgres/pg/token';
 
 // all tables
+
 export interface IModels {
   User: ReturnType<typeof User>;
   UserRole: ReturnType<typeof UserRole>;
@@ -36,9 +37,13 @@ export interface IUserAttribute extends Model<InferAttributes<IUserAttribute>, I
   RoleId?: IEnumUserRoleIds;
 
   getTokensByType(type: IEnumTokenType, tOpts: ITxOpts): Promise<ITokenAttribute[]>;
+
   removeTokensByType(type: IEnumTokenType, tOpts: ITxOpts): Promise<boolean[]>;
+
   setPassword(password: string, tOpts: ITxOpts): Promise<IUserAttribute>;
+
   validPassword(email: string): Promise<any>;
+
   filterKeys(): IUserRes;
 }
 
@@ -97,12 +102,27 @@ export interface ITokenAttribute extends Model<InferAttributes<ITokenAttribute>,
 
 export interface ITokenInstance extends ModelCtor<ITokenAttribute> {
 
-  findByTypeAndValueWithUser(type: IEnumTokenType, value: string, tOpts: ITxOpts): Promise<ITokenAttribute & {User: IUserAttribute}>;
+  findByTypeAndValueWithUser(type: IEnumTokenType, value: string, tOpts: ITxOpts): Promise<ITokenAttribute & {
+    User: IUserAttribute
+  }>;
+
   createToken(userId: string, value: string, type: IEnumTokenType, requestInfo: IRequestInfo, extraValue: any, tOpts: ITxOpts): Promise<ITokenAttribute>;
+
   createForLogin(userId: string, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<ITokenAttribute>;
-  createFor2FAEmail(user: IUserAttribute, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<{ token: ITokenAttribute, pinCode: string }>;
+
+  createFor2FAEmail(user: IUserAttribute, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<{
+    token: ITokenAttribute,
+    pinCode: string
+  }>;
+
   createForResetPassword(user: IUserAttribute, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<ITokenAttribute | null>;
-  createFor2Fa(user: IUserAttribute, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<{ token: ITokenAttribute | null, secret: string }>;
+
+  createFor2Fa(user: IUserAttribute, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<{
+    token: ITokenAttribute | null,
+    secret: string
+  }>;
+
   createForChangeEmail(user: IUserAttribute, extraValue: any, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<ITokenAttribute | null>;
+
   verify2FA(user: IUserAttribute, twoFaCode: string, requestInfo: IRequestInfo, tOpts: ITxOpts): Promise<boolean>;
 }

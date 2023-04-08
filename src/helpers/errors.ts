@@ -57,7 +57,7 @@ const ERRORS: IErrorMap = {
   },
   user_already_exist: {
     status: 403,
-    description: 'Origin not allowed',
+    description: 'Origin not allowed'
   },
   user_not_found: {
     status: 404,
@@ -73,35 +73,35 @@ const ERRORS: IErrorMap = {
   },
   two_factor_token_required: {
     status: 404,
-    description: 'This account has enabled two-factor authentication and the token is required',
+    description: 'This account has enabled two-factor authentication and the token is required'
   },
   two_factor_token_invalid: {
     status: 404,
-    description: 'The two-factor token you provided is invalid',
+    description: 'The two-factor token you provided is invalid'
   },
   two_factor_code_required: {
     status: 404,
-    description: 'The two-factor token is required',
+    description: 'The two-factor token is required'
   },
   two_factor_code_invalid: {
     status: 404,
-    description: 'The two-factor token you provided is invalid',
+    description: 'The two-factor token you provided is invalid'
   },
   token_expired: {
     status: 404,
-    description: 'This token is expired',
+    description: 'This token is expired'
   },
   disabled_account: {
     status: 404,
-    description: 'Account disabled',
+    description: 'Account disabled'
   },
   password_should_be_different: {
     status: 404,
-    description: 'New password should be different',
+    description: 'New password should be different'
   },
   invalid_token: {
     status: 404,
-    description: 'Invalid token',
+    description: 'Invalid token'
   }
 };
 
@@ -120,7 +120,7 @@ const throwExposable = (code: string, status?: number | null, description?: stri
       code,
       status,
       description,
-      exposeMeta,
+      exposeMeta
     });
   }
   const err: IExposableError = new Error(code);
@@ -172,7 +172,7 @@ export {
   assertExposable,
   castExposable,
   ERRORS
-}
+};
 
 /****
  HTTP ERROR CODES
