@@ -151,7 +151,7 @@ const Postgres = {
       await Utils.wait(Math.round(Math.random() * config.POSTGRES.RETRY_CONCURRENT_TIME) + 100)
 
       try {
-        return retryFn()
+        return await retryFn() // eslint-disable-line
       } catch (error) {
         return await Postgres.handleTxError(error, retryFn, ++i)
       }

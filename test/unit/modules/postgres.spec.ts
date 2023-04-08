@@ -49,6 +49,7 @@ describe('Postgres', () => {
 
     beforeEach(() => {
       rollback = sinon.stub().resolves()
+
       sandbox.stub(Postgres, 'transactionOptions').returns({
         transaction: {
           rollback,
@@ -114,8 +115,8 @@ describe('Postgres', () => {
     })
 
     it('retry transaction error rollback error', async () => {
-      // eslint-disable-next-line
-      ;(Postgres.transactionOptions as any).restore()
+      const wrapTxOpts: any = Postgres.transactionOptions
+      wrapTxOpts.restore()
       rollback = sinon.stub().resolves()
       sandbox.stub(Postgres, 'transactionOptions').returns({
         transaction: {
