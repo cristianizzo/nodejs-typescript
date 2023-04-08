@@ -1,24 +1,25 @@
-import * as Joi from 'joi';
-import { throwExposable } from '@errors';
-import * as disposableEmailDomains from 'disposable-email-domains';
-import * as disposableEmailWildcards from 'disposable-email-domains/wildcard.json';
+import * as Joi from 'joi'
+import { throwExposable } from '@errors'
+import * as disposableEmailDomains from 'disposable-email-domains'
+import * as disposableEmailWildcards from 'disposable-email-domains/wildcard.json'
 
 export const schema = {
   uuid: Joi.string().guid({
     version: ['uuidv4']
   }),
-  email: Joi.string().trim().lowercase().max(64).email()
+  email: Joi.string()
+    .trim()
+    .lowercase()
+    .max(64)
+    .email()
     .custom((value, helper) => {
-      const domain = value.split('@')[1];
+      const domain = value.split('@')[1]
 
-      if (
-        !disposableEmailDomains.includes(domain) &&
-        !disposableEmailWildcards.find((wildcard) => domain.endsWith(wildcard))
-      ) {
-        return value;
+      if (!disposableEmailDomains.includes(domain) && !disposableEmailWildcards.find((wildcard) => domain.endsWith(wildcard))) {
+        return value
       }
 
-      return helper.error('Email not acceptable');
+      return helper.error('Email not acceptable')
     }),
   password: Joi.string().length(64),
   twoFaCode: Joi.string().length(6),
@@ -34,25 +35,21 @@ export const schema = {
   }),
 
   validateParams: async (schema: Joi.Schema, params: any) => {
-
     try {
-
-      return await schema.validateAsync(params, { presence: 'required' });
-
+      return await schema.validateAsync(params, { presence: 'required' })
     } catch (error: any) {
-
       const validationError = {
         params,
         errors: error.details.map((detail: any) => detail.message)
-      };
+      }
 
       if (validationError.params.password) {
-        delete validationError.params.password;
+        delete validationError.params.password
       }
 
       throwExposable('bad_params', null, null, {
         validationError
-      });
+      })
     }
   }
-};
+}

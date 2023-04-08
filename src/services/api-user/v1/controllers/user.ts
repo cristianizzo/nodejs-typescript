@@ -1,437 +1,402 @@
-import config from '@config';
-import Models from '@postgresModels';
-import { assertExposable, throwExposable } from '@errors';
-import Utils from '@helpers/utils';
-import { IRequestInfo } from '@type/system/requestInfo';
-import {
-  IAskLogin,
-  IChangePassword,
-  ILogin,
-  IResetPassword,
-  ISignup,
-  IUpdateUser
-} from '@type/routers/req/user';
-import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '@type/db/db';
-import Postgres from '@modules/postgres';
-import { ITxOpts } from '@type/db/transaction';
-import { IEnumEnvironment } from '@type/config/config';
-import {
-  IAskTwoFactorRes,
-  IEnumLoginType,
-  ILoginRes,
-  ILoginTypeRes,
-  IUserRes
-} from '@type/routers/res/user';
-import * as moment from 'moment';
-import logger from '@logger';
-import AuthMiddleware from '@api-user/v1/middlewares/auth';
-import Notification from '@modules/notification';
+import { assertExposable, throwExposable } from '@errors'
+import { IRequestInfo } from '@type/system/requestInfo'
+import { IAskLogin, IChangePassword, ILogin, IResetPassword, ISignup, IUpdateUser } from '@type/routers/req/user'
+import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '@type/db/db'
+import { ITxOpts } from '@type/db/transaction'
+import { IEnumEnvironment } from '@type/config/config'
+import { IAskTwoFactorRes, IEnumLoginType, ILoginRes, ILoginTypeRes, IUserRes } from '@type/routers/res/user'
+import * as moment from 'moment'
+import config from '@config'
+import Models from '@postgresModels'
+import Utils from '@helpers/utils'
+import Postgres from '@modules/postgres'
+import logger from '@logger'
+import AuthMiddleware from '@api-user/v1/middlewares/auth'
+import Notification from '@modules/notification'
 
-const llo = logger.logMeta.bind(null, { service: 'api-user:controller:user' });
+const llo = logger.logMeta.bind(null, { service: 'api-user:controller:user' })
 
 const UserController = {
-  //////// NO AUTH
+  /// ///// NO AUTH
   createUser: async (rawUser: ISignup, opts: IRequestInfo): Promise<ILoginTypeRes> => {
-
-    assertExposable(config.ALLOW_SIGNUP, 'signup_disabled');
+    assertExposable(config.ALLOW_SIGNUP, 'signup_disabled')
 
     const user = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
+      const userExisting = await Models.User.findByEmail(rawUser.email, tOpts)
 
-      const userExisting = await Models.User.findByEmail(rawUser.email, tOpts);
-
-      if (userExisting) {
+      if (userExisting != null) {
         if (!(await userExisting.validPassword(rawUser.password))) {
-          await UserController._checkFailedLoginAttempts(userExisting, tOpts);
-          await tOpts.transaction.commit();
-          return false;
+          await UserController._checkFailedLoginAttempts(userExisting, tOpts)
+          await tOpts.transaction.commit()
+          return false
         } else {
-          await tOpts.transaction.rollback();
-          return userExisting;
+          await tOpts.transaction.rollback()
+          return userExisting
         }
       }
 
-      const newUser = await Models.User.create(rawUser as any, tOpts);
-      await tOpts.transaction.commit();
+      const newUser = await Models.User.create(rawUser as any, tOpts)
+      await tOpts.transaction.commit()
 
-      logger.info('User created', llo({ userId: newUser.id }));
+      logger.info('User created', llo({ userId: newUser.id }))
 
-      return newUser;
-    });
+      return newUser
+    })
 
     if (!user) {
-      return { type: IEnumLoginType.email };
+      return { type: IEnumLoginType.email }
     }
 
-    return UserController.askLogin({ email: rawUser.email, password: rawUser.password }, opts);
+    return await UserController.askLogin({ email: rawUser.email, password: rawUser.password }, opts)
   },
 
   askLogin: async ({ email, password }: IAskLogin, opts: IRequestInfo): Promise<ILoginTypeRes> => {
-
-    const logInfo: any = { email };
+    const logInfo: any = { email }
 
     const { user, pinCode } = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-      const user = await Models.User.findByEmail(email, tOpts);
-      assertExposable((user && user.isActive), 'bad_credentials', null, null, {
+      const user = (await Models.User.findByEmail(email, tOpts)) as IUserAttribute
+      assertExposable(user?.isActive, 'bad_credentials', null, null, {
         // password,
         email
-      });
-      logInfo.logInfo = user.id;
+      })
+      logInfo.logInfo = user.id
 
-      const validPassword = await user.validPassword(password);
+      const validPassword = await user.validPassword(password)
       if (!validPassword) {
-        await UserController._checkFailedLoginAttempts(user, tOpts);
-        await tOpts.transaction.commit();
+        await UserController._checkFailedLoginAttempts(user, tOpts)
+        await tOpts.transaction.commit()
 
         throwExposable('bad_credentials', null, null, {
           // password,
           email
-        });
+        })
       }
 
       if (!user.twoFactor) {
-        const { token, pinCode } = await Models.Token.createFor2FAEmail(user, opts, tOpts);
+        const { token, pinCode } = await Models.Token.createFor2FAEmail(user, opts, tOpts)
 
         if (config.ENVIRONMENT === IEnumEnvironment.dev) {
-          logInfo.token = token.value;
+          logInfo.token = token.value
         }
 
-        await tOpts.transaction.commit();
-        return { user, pinCode };
-
+        await tOpts.transaction.commit()
+        return { user, pinCode }
       } else {
-        await tOpts.transaction.rollback();
-        return { user };
+        await tOpts.transaction.rollback()
+        return { user }
       }
-    });
+    })
 
     if (pinCode) {
-      Utils.setImmediateAsync(() => Notification.askLogin(user.filterKeys(), pinCode, opts));
-      Utils.setImmediateAsync(() => Notification.askLogin(user.filterKeys(), pinCode, opts));
+      Utils.setImmediateAsync(async () => await Notification.askLogin(user.filterKeys(), pinCode, opts))
+      Utils.setImmediateAsync(async () => await Notification.askLogin(user.filterKeys(), pinCode, opts))
     }
 
-    logger.verbose('User ask login', llo(logInfo));
+    logger.verbose('User ask login', llo(logInfo))
 
     return {
       type: user.twoFactor ? IEnumLoginType.twoFa : IEnumLoginType.email
-    };
+    }
   },
 
   login: async ({ email, password, twoFaCode }: ILogin, opts: IRequestInfo): Promise<ILoginRes> => {
-
     const { user, jwt } = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-
-      const user = await Models.User.findByEmail(email, tOpts);
-      assertExposable((user && user.isActive), 'bad_credentials', null, null, {
+      const user = (await Models.User.findByEmail(email, tOpts)) as IUserAttribute
+      assertExposable(user?.isActive, 'bad_credentials', null, null, {
         // password,
         email,
         twoFaCode
-      });
+      })
 
-      const validPassword = await user.validPassword(password);
+      const validPassword = await user.validPassword(password)
 
       if (!validPassword) {
-        await UserController._checkFailedLoginAttempts(user, tOpts);
-        await tOpts.transaction.commit();
+        await UserController._checkFailedLoginAttempts(user, tOpts)
+        await tOpts.transaction.commit()
 
         throwExposable('bad_credentials', null, null, {
           // password,
           email,
           twoFaCode
-        });
+        })
       }
 
       if (user.email !== config.DEMO_ACCOUNT) {
-
         try {
-
-          await Models.Token.verify2FA(user, twoFaCode, opts, tOpts);
-
+          await Models.Token.verify2FA(user, twoFaCode, opts, tOpts)
         } catch (error: any) {
-
           if (['token_expired', 'two_factor_code_invalid'].includes(error.message)) {
-            await UserController._checkFailedLoginAttempts(user, tOpts);
-            await tOpts.transaction.commit();
+            await UserController._checkFailedLoginAttempts(user, tOpts)
+            await tOpts.transaction.commit()
           } else {
-            await tOpts.transaction.rollback();
+            await tOpts.transaction.rollback()
           }
 
-          throw error;
+          throw error
         }
       }
 
-      await user.update({ countLoginFailed: 0 }, tOpts);
+      await user.update({ countLoginFailed: 0 }, tOpts)
 
       if (!user.verifyEmail) {
-
-        await user.update({ verifyEmail: true }, tOpts);
-        Utils.setImmediateAsync(() => Notification.validateEmail(user.filterKeys()));
-        logger.verbose('User validate email', llo({ userId: user.id }));
-
+        await user.update({ verifyEmail: true }, tOpts)
+        Utils.setImmediateAsync(async () => await Notification.validateEmail(user.filterKeys()))
+        logger.verbose('User validate email', llo({ userId: user.id }))
       } else {
-        Utils.setImmediateAsync(() => Notification.login(user.filterKeys(), opts));
-        logger.verbose('User login', llo({ userId: user.id }));
+        Utils.setImmediateAsync(async () => await Notification.login(user.filterKeys(), opts))
+        logger.verbose('User login', llo({ userId: user.id }))
       }
 
-      const jwt = await AuthMiddleware.generateLogin(user, opts, tOpts);
+      const jwt = await AuthMiddleware.generateLogin(user, opts, tOpts)
 
-      await tOpts.transaction.commit();
+      await tOpts.transaction.commit()
 
-      return { user, jwt };
-    });
+      return { user, jwt }
+    })
 
-    return { token: jwt, user: user.filterKeys() };
+    return { token: jwt, user: user.filterKeys() }
   },
 
   askResetPassword: async (email: string, opts: IRequestInfo): Promise<boolean> => {
+    const user = await Models.User.findByEmail(email)
 
-    const user = await Models.User.findByEmail(email);
-
-    if (!user || !user.isActive) {
-      return true;
+    if (user == null || !user.isActive) {
+      return true
     }
 
     const token = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-      await UserController._checkFailedLoginAttempts(user, tOpts);
+      await UserController._checkFailedLoginAttempts(user, tOpts)
 
       if (!user.isActive) {
-        await tOpts.transaction.commit();
-        return false;
+        await tOpts.transaction.commit()
+        return false
       }
 
-      const token = await Models.Token.createForResetPassword(user, opts, tOpts);
-      await tOpts.transaction.commit();
+      const token = await Models.Token.createForResetPassword(user, opts, tOpts)
+      await tOpts.transaction.commit()
 
-      return token;
-    });
+      return token
+    })
 
-    token && Utils.setImmediateAsync(() => Notification.askResetPassword(user.filterKeys(), token.value));
+    token && Utils.setImmediateAsync(async () => await Notification.askResetPassword(user.filterKeys(), token.value))
 
-    logger.verbose('User send reset mail', llo({ userId: user.id }));
+    logger.verbose('User send reset mail', llo({ userId: user.id }))
 
-    return true;
+    return true
   },
 
   resetPassword: async ({ token, newPassword }: IResetPassword): Promise<boolean> => {
-
     const tokenDb = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-      const tokenDb = await Models.Token.findByTypeAndValueWithUser(IEnumTokenType.RESET_PASSWORD, token, tOpts);
+      const tokenDb = await Models.Token.findByTypeAndValueWithUser(IEnumTokenType.RESET_PASSWORD, token, tOpts)
 
-      assertExposable(!!(tokenDb), 'invalid_token');
-      assertExposable(moment(tokenDb.createdAt).isAfter(moment().subtract({ hours: config.SERVICES.API_USER.MAIL_RESET_PASSWORD_EXPIRATION })), 'token_expired');
+      assertExposable(!!tokenDb, 'invalid_token')
+      assertExposable(
+        moment(tokenDb.createdAt).isAfter(moment().subtract({ hours: config.SERVICES.API_USER.MAIL_RESET_PASSWORD_EXPIRATION })),
+        'token_expired'
+      )
 
       if (await tokenDb.User.validPassword(newPassword)) {
-        throwExposable('password_should_be_different');
+        throwExposable('password_should_be_different')
       }
 
-      await tokenDb.User.setPassword(newPassword, tOpts);
+      await tokenDb.User.setPassword(newPassword, tOpts)
 
-      await tokenDb.destroy(tOpts);
+      await tokenDb.destroy(tOpts)
 
       await Promise.all([
         tokenDb.User.removeTokensByType(IEnumTokenType.RESET_PASSWORD, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.TWO_FACTOR_EMAIL_LOGIN, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.CHANGE_EMAIL, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.AUTH, tOpts)
-      ]);
+      ])
 
-      await tOpts.transaction.commit();
+      await tOpts.transaction.commit()
 
-      return tokenDb;
-    });
+      return tokenDb
+    })
 
-    Utils.setImmediateAsync(() => Notification.passwordChanged(tokenDb.User.filterKeys()));
+    Utils.setImmediateAsync(async () => await Notification.passwordChanged(tokenDb.User.filterKeys()))
 
-    logger.info('User password reset', llo({ userId: tokenDb.User.id }));
+    logger.info('User password reset', llo({ userId: tokenDb.User.id }))
 
-    return true;
+    return true
   },
 
   changeEmail: async (token: string): Promise<boolean> => {
-
     const { tokenDb, newEmail } = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
+      const tokenDb = await Models.Token.findByTypeAndValueWithUser(IEnumTokenType.CHANGE_EMAIL, token, tOpts)
 
-      const tokenDb = await Models.Token.findByTypeAndValueWithUser(IEnumTokenType.CHANGE_EMAIL, token, tOpts);
+      assertExposable(!!tokenDb, 'invalid_token')
 
-      assertExposable(!!(tokenDb), 'invalid_token');
+      const newEmail = tokenDb.extraValue
+      await tokenDb.User.update({ email: newEmail } as any, tOpts)
 
-      const newEmail = tokenDb.extraValue;
-      await tokenDb.User.update({ email: newEmail } as any, tOpts);
-
-      await tokenDb.destroy(tOpts);
+      await tokenDb.destroy(tOpts)
 
       await Promise.all([
         tokenDb.User.removeTokensByType(IEnumTokenType.RESET_PASSWORD, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.TWO_FACTOR_EMAIL_LOGIN, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.CHANGE_EMAIL, tOpts),
         tokenDb.User.removeTokensByType(IEnumTokenType.AUTH, tOpts)
-      ]);
+      ])
 
-      await tOpts.transaction.commit();
+      await tOpts.transaction.commit()
 
-      return { tokenDb, newEmail };
-    });
+      return { tokenDb, newEmail }
+    })
 
-    Utils.setImmediateAsync(() => Notification.emailChanged(tokenDb.User.filterKeys()));
+    Utils.setImmediateAsync(async () => await Notification.emailChanged(tokenDb.User.filterKeys()))
 
-    logger.info('User email changed', llo({ userId: tokenDb.User.id, newEmail }));
+    logger.info('User email changed', llo({ userId: tokenDb.User.id, newEmail }))
 
-    return true;
+    return true
   },
 
-  //////// Verified Auth
+  /// ///// Verified Auth
 
   async update(user: IUserAttribute, params: IUpdateUser): Promise<IUserRes> {
-    let newParams = Utils.removeEmptyStrings(params);
+    const newParams = Utils.removeEmptyStrings(params)
 
-    assertExposable(Object.keys(newParams).length > 0, 'bad_params');
+    assertExposable(Object.keys(newParams).length > 0, 'bad_params')
 
-    await user.update(newParams);
+    await user.update(newParams)
 
-    return user.filterKeys();
+    return user.filterKeys()
   },
 
   async logout(user: IUserAttribute, token: ITokenAttribute): Promise<boolean> {
-    await token.destroy();
+    await token.destroy()
 
-    logger.verbose('User logout', llo({ userId: user.id }));
+    logger.verbose('User logout', llo({ userId: user.id }))
 
-    return true;
+    return true
   },
 
   async changePassword(user: IUserAttribute, { oldPassword, newPassword }: IChangePassword): Promise<boolean> {
-
     await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-      await user.reload(tOpts);
+      await user.reload(tOpts)
 
       if (!(await user.validPassword(oldPassword))) {
-        throwExposable('bad_credentials');
+        throwExposable('bad_credentials')
       }
 
       if (oldPassword === newPassword) {
-        throwExposable('password_should_be_different');
+        throwExposable('password_should_be_different')
       }
 
-      await user.setPassword(newPassword, tOpts);
+      await user.setPassword(newPassword, tOpts)
 
       await Promise.all([
         user.removeTokensByType(IEnumTokenType.RESET_PASSWORD, tOpts),
         user.removeTokensByType(IEnumTokenType.TWO_FACTOR_EMAIL_LOGIN, tOpts),
         user.removeTokensByType(IEnumTokenType.CHANGE_EMAIL, tOpts),
         user.removeTokensByType(IEnumTokenType.AUTH, tOpts)
-      ]);
+      ])
 
-      await tOpts.transaction.commit();
+      await tOpts.transaction.commit()
+    })
 
-    });
+    Utils.setImmediateAsync(async () => await Notification.passwordChanged(user.filterKeys()))
 
-    Utils.setImmediateAsync(() => Notification.passwordChanged(user.filterKeys()));
-
-    return true;
+    return true
   },
 
   async askTwoFactor(user: IUserAttribute, requestInfo: IRequestInfo): Promise<IAskTwoFactorRes> {
-
     const secret = await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
+      await user.reload(tOpts)
 
-      await user.reload(tOpts);
+      assertExposable(!user.twoFactor, 'two_factor_already_enable', null, null)
 
-      assertExposable(!user.twoFactor, 'two_factor_already_enable', null, null);
+      const { secret } = await Models.Token.createFor2Fa(user, requestInfo, tOpts)
+      await tOpts.transaction.commit()
 
-      const { secret } = await Models.Token.createFor2Fa(user, requestInfo, tOpts);
-      await tOpts.transaction.commit();
+      return secret
+    })
 
-      return secret;
-    });
-
-    const qrData = `otpauth://totp/${user.email}?secret=${secret}&issuer=AgreeWe`;
+    const qrData = `otpauth://totp/${user.email}?secret=${secret}&issuer=AgreeWe`
 
     return {
       secret,
       qrData
-    };
+    }
   },
 
   async enableTwoFactor(user: IUserAttribute, twoFaCode: string, requestInfo: IRequestInfo): Promise<boolean> {
-
     await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
+      await user.reload(tOpts)
 
-      await user.reload(tOpts);
+      assertExposable(!user.twoFactor, 'two_factor_already_enable', null, null)
 
-      assertExposable(!user.twoFactor, 'two_factor_already_enable', null, null);
+      await user.update({ twoFactor: true }, tOpts)
 
-      await user.update({ twoFactor: true }, tOpts);
-
-      await Models.Token.verify2FA(user, twoFaCode, requestInfo, tOpts);
+      await Models.Token.verify2FA(user, twoFaCode, requestInfo, tOpts)
 
       await Promise.all([
         user.removeTokensByType(IEnumTokenType.RESET_PASSWORD, tOpts),
         user.removeTokensByType(IEnumTokenType.TWO_FACTOR_EMAIL_LOGIN, tOpts),
         user.removeTokensByType(IEnumTokenType.CHANGE_EMAIL, tOpts),
         user.removeTokensByType(IEnumTokenType.AUTH, tOpts)
-      ]);
+      ])
 
-      await tOpts.transaction.commit();
-    });
-    return true;
+      await tOpts.transaction.commit()
+    })
+    return true
   },
 
   async disableTwoFactor(user: IUserAttribute, twoFaCode: string, requestInfo: IRequestInfo): Promise<boolean> {
-
     await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
-
-      await user.reload(tOpts);
-      assertExposable(user.twoFactor, 'two_factor_not_enabled', null, null);
+      await user.reload(tOpts)
+      assertExposable(user.twoFactor, 'two_factor_not_enabled', null, null)
 
       try {
-
-        await Models.Token.verify2FA(user, twoFaCode, requestInfo, tOpts);
-
+        await Models.Token.verify2FA(user, twoFaCode, requestInfo, tOpts)
       } catch (error: any) {
         if (['token_expired', 'two_factor_code_invalid'].includes(error.message)) {
-          await UserController._checkFailedLoginAttempts(user, tOpts);
-          await tOpts.transaction.commit();
+          await UserController._checkFailedLoginAttempts(user, tOpts)
+          await tOpts.transaction.commit()
         }
-        throw error;
+        throw error
       }
 
-      await user.update({ twoFactor: false }, tOpts);
+      await user.update({ twoFactor: false }, tOpts)
 
       await Promise.all([
         user.removeTokensByType(IEnumTokenType.TWO_FACTOR_LOGIN, tOpts),
         user.removeTokensByType(IEnumTokenType.RESET_PASSWORD, tOpts),
         user.removeTokensByType(IEnumTokenType.CHANGE_EMAIL, tOpts),
         user.removeTokensByType(IEnumTokenType.AUTH, tOpts)
-      ]);
+      ])
 
-      await tOpts.transaction.commit();
+      await tOpts.transaction.commit()
+    })
 
-    });
-
-    Utils.setImmediateAsync(() => Notification.twoFaDisabled(user.filterKeys(), requestInfo));
-    return true;
+    Utils.setImmediateAsync(async () => await Notification.twoFaDisabled(user.filterKeys(), requestInfo))
+    return true
   },
 
   _checkFailedLoginAttempts: async (user: IUserAttribute, tOpts = {}): Promise<boolean> => {
-    const newFailedLoginCount = user.countLoginFailed + 1;
+    const newFailedLoginCount = user.countLoginFailed + 1
 
     if (!user.isActive && newFailedLoginCount > config.SERVICES.API_USER.LOGIN_RETRY_ATTEMPTS + 10) {
       throwExposable('disabled_account', null, null, {
         email: user.email
-      });
+      })
     }
 
-    await user.update({
-      isActive: newFailedLoginCount >= config.SERVICES.API_USER.LOGIN_RETRY_ATTEMPTS ? false : user.isActive,
-      countLoginFailed: newFailedLoginCount
-    }, tOpts);
+    await user.update(
+      {
+        isActive: newFailedLoginCount >= config.SERVICES.API_USER.LOGIN_RETRY_ATTEMPTS ? false : user.isActive,
+        countLoginFailed: newFailedLoginCount
+      },
+      tOpts
+    )
 
     if (newFailedLoginCount >= config.SERVICES.API_USER.LOGIN_RETRY_ATTEMPTS) {
-      Utils.setImmediateAsync(() => Notification.accountBlocked(user.filterKeys()));
+      Utils.setImmediateAsync(async () => await Notification.accountBlocked(user.filterKeys()))
     }
 
-    return true;
+    return true
   }
+}
 
-};
-
-export default UserController;
+export default UserController

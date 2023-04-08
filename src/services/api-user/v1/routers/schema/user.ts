@@ -1,5 +1,5 @@
-import * as Joi from 'joi';
-import { schema } from '@api-user/v1/routers/schema/validation';
+import * as Joi from 'joi'
+import { schema } from '@api-user/v1/routers/schema/validation'
 
 const UserSchema = {
   createUser: Joi.object({
@@ -57,7 +57,6 @@ const UserSchema = {
   disableTwoFactor: Joi.object({
     twoFaCode: schema.twoFaCode
   })
+}
 
-};
-
-export default UserSchema;
+export default UserSchema

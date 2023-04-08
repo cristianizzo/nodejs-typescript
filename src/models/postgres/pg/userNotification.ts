@@ -1,9 +1,10 @@
-import { DataTypes, Sequelize } from 'sequelize';
-import { IUserNotificationAttribute, IUserNotificationInstance } from '@type/db/db';
+import { DataTypes, Sequelize } from 'sequelize'
+import { IUserNotificationAttribute, IUserNotificationInstance } from '@type/db/db'
 
-export default function(sequelize: Sequelize): IUserNotificationInstance {
-
-  const UserNotification = sequelize.define<IUserNotificationAttribute>('UserNotification', {
+export default function (sequelize: Sequelize): IUserNotificationInstance {
+  const UserNotification = sequelize.define<IUserNotificationAttribute>(
+    'UserNotification',
+    {
       expoToken: {
         type: DataTypes.STRING,
         primaryKey: true
@@ -12,7 +13,8 @@ export default function(sequelize: Sequelize): IUserNotificationInstance {
     {
       freezeTableName: true,
       timestamps: false
-    }) as IUserNotificationInstance;
+    }
+  ) as IUserNotificationInstance
 
-  return UserNotification;
-};
+  return UserNotification
+}

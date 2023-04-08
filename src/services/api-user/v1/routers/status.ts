@@ -1,15 +1,13 @@
-import * as Router from '@koa/router';
-import StatusController from '@api-user/v1/controllers/status';
-import { IAppInfo } from '@type/routers/res/status';
+import * as Router from '@koa/router'
+import StatusController from '@api-user/v1/controllers/status'
 
 const StatusRouter = {
-
   async status(ctx: Router.RouterContext) {
-    ctx.body = await StatusController.get() as IAppInfo;
+    ctx.body = StatusController.get()
   },
 
   router() {
-    const router = new Router();
+    const router = new Router()
 
     /**
      * @api {get} / Get status
@@ -20,10 +18,10 @@ const StatusRouter = {
      * @apiSampleRequest /
      *
      */
-    router.get('/', StatusRouter.status);
+    router.get('/', StatusRouter.status)
 
-    return router;
+    return router
   }
-};
+}
 
-export default StatusRouter;
+export default StatusRouter

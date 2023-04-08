@@ -1,22 +1,22 @@
-import { Context, Next } from 'koa';
-import { v4 as uuidv4 } from 'uuid';
-import DeviceInfoMapper from '@helpers/deviceInfoMapper';
-import logger from '@logger';
+import { Context, Next } from 'koa'
+import { v4 as uuidv4 } from 'uuid'
+import DeviceInfoMapper from '@helpers/deviceInfoMapper'
+import logger from '@logger'
 
-const llo = logger.logMeta.bind(null, { service: 'api-user:logger' });
+const llo = logger.logMeta.bind(null, { service: 'api-user:logger' })
 
 function cleanQuery(query: any) {
-  const clean = { ...query };
-  delete clean.password;
-  return clean;
+  const clean = { ...query }
+  delete clean.password
+  return clean
 }
 
 export default () => async (ctx: Context, next: Next) => {
   if (ctx.request.method === 'OPTIONS') {
-    return next();
+    return await next()
   }
 
-  const correlationId = uuidv4();
+  const correlationId = uuidv4()
 
   ctx.requestInfo = {
     start: Date.now(),
@@ -29,32 +29,32 @@ export default () => async (ctx: Context, next: Next) => {
     host: ctx.request.host,
     protocol: ctx.request.protocol,
     origin: ctx.request.get('origin')
-  };
-
-  if (ctx.request.headers && ctx.request.headers['user-agent']) {
-    const userAgent = ctx.request.headers['user-agent'] as string;
-    ctx.requestInfo.userAgentInfo = DeviceInfoMapper.getDeviceInfo(userAgent);
   }
 
-  ctx.requestInfo.query = cleanQuery(ctx.request.query);
+  if (ctx.request.headers?.['user-agent']) {
+    const userAgent = ctx.request.headers['user-agent']
+    ctx.requestInfo.userAgentInfo = DeviceInfoMapper.getDeviceInfo(userAgent)
+  }
 
-  ctx.response.set('X-Correlation-Id', correlationId);
+  ctx.requestInfo.query = cleanQuery(ctx.request.query)
+
+  ctx.response.set('X-Correlation-Id', correlationId)
   // TODO use cls to send correlationID to microservices
 
-  await next();
+  await next()
 
-  ctx.requestInfo.status = ctx.status;
-  ctx.requestInfo.time = Date.now() - ctx.requestInfo.start;
+  ctx.requestInfo.status = ctx.status
+  ctx.requestInfo.time = Date.now() - ctx.requestInfo.start
 
-  let level: 'verbose' | 'warn' | 'error' = 'verbose';
+  let level: 'verbose' | 'warn' | 'error' = 'verbose'
 
   if (ctx.requestInfo.error) {
     if (ctx.requestInfo.error.exposeCustom_) {
-      level = 'warn';
+      level = 'warn'
     } else {
-      level = 'error';
+      level = 'error'
     }
   }
 
-  logger[level]('API request', llo(ctx.requestInfo));
-};
+  logger[level]('API request', llo(ctx.requestInfo))
+}

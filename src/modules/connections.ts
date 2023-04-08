@@ -1,81 +1,81 @@
-import Utils from '@helpers/utils';
-import logger from '@logger';
-import Postgres from '@modules/postgres';
-import MongoDB from '@modules/mongo';
+import Utils from '@helpers/utils'
+import logger from '@logger'
+import Postgres from '@modules/postgres'
+import MongoDB from '@modules/mongo'
+import { throwError } from '@errors'
 
-const llo = logger.logMeta.bind(null, { service: 'connection' });
+const llo = logger.logMeta.bind(null, { service: 'connection' })
 
-interface Connections {
-  openedConnections: string[];
-  open: (needConnections: string[]) => Promise<any>;
-  close: () => Promise<void>;
-}
+const Connections = {
+  openedConnections: [] as string[],
 
-const Connections: Connections = {
-  openedConnections: [],
-
-  open(needConnections: string[]): Promise<any> {
-    return Utils.asyncForEach(needConnections, async (connection: string) => {
+  async open(needConnections: string[]): Promise<any> {
+    return await Utils.asyncForEach(needConnections, async (connection: string) => {
       try {
-        if (!connection || Connections.openedConnections.find((c) => c === connection)) return Promise.resolve();
+        if (!connection || Connections.openedConnections.find((c) => c === connection)) {
+          await Promise.resolve()
+          return
+        }
 
-        Connections.openedConnections.push(connection);
+        Connections.openedConnections.push(connection)
 
         switch (connection) {
           case 'postgres': {
-            await Postgres.connect();
-            return true;
+            await Postgres.connect()
+            return true
           }
           case 'mongodb': {
-            await MongoDB.connect();
-            return true;
+            await MongoDB.connect()
+            return true
           }
           default: {
-            Connections.openedConnections.pop();
-            return Promise.reject(new Error('Unknown service to connect to'));
+            Connections.openedConnections.pop()
+            throwError('Unknown service to connect to')
           }
         }
       } catch (err: any) {
-        err.connection = connection;
-        throw err;
+        err.connection = connection
+        throw err
       }
     })
       .then(() => {
-        logger.verbose('Connections open', llo({}));
-        return true;
+        logger.verbose('Connections open', llo({}))
+        return true
       })
       .catch((error) => {
-        Connections.openedConnections.pop();
-        logger.warn('Unable to open connections', { error });
-        throw error;
-      });
+        Connections.openedConnections.pop()
+        logger.warn('Unable to open connections', { error })
+        throw error
+      })
   },
 
-  close(): Promise<any> {
-    return Utils.asyncForEach(Connections.openedConnections, async (connection: string) => {
+  async close(): Promise<any> {
+    return await Utils.asyncForEach(Connections.openedConnections, async (connection: string) => {
       switch (connection) {
         case 'postgres': {
-          return Postgres.disconnect();
+          await Postgres.disconnect()
+          return
         }
         case 'mongodb': {
-          return MongoDB.disconnect();
+          await MongoDB.disconnect()
+          return
         }
         default: {
-          return Promise.reject(new Error('Unknown service to disconnect from'));
+          return await Promise.reject(new Error('Unknown service to disconnect from'))
         }
       }
     })
-      .then(() => {
-        Connections.openedConnections = [];
-        logger.verbose('Connections closed', llo({}));
-        logger.purge();
-        return Utils.wait(500);
+      .then(async () => {
+        Connections.openedConnections = []
+        logger.verbose('Connections closed', llo({}))
+        logger.purge()
+        return await Utils.wait(500)
       })
       .catch((error) => {
-        logger.error('Unable to close connections', llo({ error }));
-        throw error;
-      });
+        logger.error('Unable to close connections', llo({ error }))
+        throw error
+      })
   }
-};
+}
 
-export default Connections;
+export default Connections

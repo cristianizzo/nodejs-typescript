@@ -1,22 +1,18 @@
-interface ErrorDetail {
-  [key: string]: any;
-}
+type ErrorDetail = Record<string, any>
 
 interface IExposableError extends Error {
-  exposeCustom_?: boolean;
-  status?: number;
-  description?: string;
-  exposeMeta?: any;
+  exposeCustom_?: boolean
+  status?: number
+  description?: string
+  exposeMeta?: any
 }
 
 interface IErrorConfig {
-  status: number;
-  description: string;
+  status: number
+  description: string
 }
 
-interface IErrorMap {
-  [key: string]: IErrorConfig;
-}
+type IErrorMap = Record<string, IErrorConfig>
 
 const ERRORS: IErrorMap = {
   invalid_origin: {
@@ -103,76 +99,68 @@ const ERRORS: IErrorMap = {
     status: 404,
     description: 'Invalid token'
   }
-};
+}
 
 const throwError = (message: string, detail: ErrorDetail = {}) => {
-  const err = new Error(message);
+  const err = new Error(message)
 
-  Object.assign(err, detail);
+  Object.assign(err, detail)
 
-  throw err;
-};
+  throw err
+}
 
 const throwExposable = (code: string, status?: number | null, description?: string | null, exposeMeta?: any) => {
-  const error: IErrorConfig = ERRORS[code];
+  const error: IErrorConfig = ERRORS[code]
   if (!error) {
     throwError('unknown_error_code', {
       code,
       status,
       description,
       exposeMeta
-    });
+    })
   }
-  const err: IExposableError = new Error(code);
-  err.exposeCustom_ = true;
+  const err: IExposableError = new Error(code)
+  err.exposeCustom_ = true
 
-  err.status = status || error.status;
-  err.description = description || error.description;
+  err.status = status ?? error.status
+  err.description = description ?? error.description
 
   if (exposeMeta) {
-    err.exposeMeta = exposeMeta;
+    err.exposeMeta = exposeMeta
   }
 
-  throw err;
-};
+  throw err
+}
 
 function castExposable(error: Error) {
   if ((error as IExposableError).exposeCustom_) {
-    throw error;
+    throw error
   }
 
-  throwExposable(error.message, (error as IExposableError).status, (error as IExposableError).description);
+  throwExposable(error.message, (error as IExposableError).status, (error as IExposableError).description)
 }
 
 function assert(condition: boolean, message: string, detail?: ErrorDetail) {
   if (!condition) {
-    throwError(message, detail);
+    throwError(message, detail)
   }
 }
 
 function assertExposable(condition: boolean, code: string, status?: number | null, description?: string | null, exposeMeta?: any) {
   if (!condition) {
-    throwExposable(code, status, description, exposeMeta);
+    throwExposable(code, status, description, exposeMeta)
   }
 }
 
 function bodyParserError(error: any) {
   if (error.type === 'entity.too.large') {
-    throwExposable('entity_too_large');
+    throwExposable('entity_too_large')
   } else {
-    throwExposable('bad_params', 400, error.message);
+    throwExposable('bad_params', 400, error.message)
   }
 }
 
-export {
-  throwError,
-  throwExposable,
-  bodyParserError,
-  assert,
-  assertExposable,
-  castExposable,
-  ERRORS
-};
+export { throwError, throwExposable, bodyParserError, assert, assertExposable, castExposable, ERRORS }
 
 /****
  HTTP ERROR CODES

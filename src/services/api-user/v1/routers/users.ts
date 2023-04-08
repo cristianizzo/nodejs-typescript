@@ -1,149 +1,139 @@
-import * as Router from '@koa/router';
-import { schema } from '@api-user/v1/routers/schema/validation';
-import UserSchema from '@api-user/v1/routers/schema/user';
-import UserController from '@api-user/v1/controllers/user';
-import { pick } from 'lodash';
-import { ParameterizedContext } from 'koa';
-import AuthMiddleware from '@api-user/v1/middlewares/auth';
+import * as Router from '@koa/router'
+import { schema } from '@api-user/v1/routers/schema/validation'
+import UserSchema from '@api-user/v1/routers/schema/user'
+import UserController from '@api-user/v1/controllers/user'
+import { pick } from 'lodash'
+import { ParameterizedContext } from 'koa'
+import AuthMiddleware from '@api-user/v1/middlewares/auth'
 
 const UsersRouter = {
-
-  //////// NO AUTH
+  /// ///// NO AUTH
   async createUser(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['firstName', 'lastName', 'email', 'password', 'termsVersion'])
 
-    const params = pick(ctx.request.body, ['firstName', 'lastName', 'email', 'password', 'termsVersion']);
+    const formattedParams = await schema.validateParams(UserSchema.createUser, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.createUser, params);
-
-    ctx.body = await UserController.createUser(formattedParams, ctx.requestInfo);
+    ctx.body = await UserController.createUser(formattedParams, ctx.requestInfo)
   },
 
   async askLogin(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['email', 'password'])
 
-    const params = pick(ctx.request.body, ['email', 'password']);
+    const formattedParams = await schema.validateParams(UserSchema.askLogin, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.askLogin, params);
-
-    ctx.body = await UserController.askLogin({
-      email: formattedParams.email,
-      password: formattedParams.password
-    }, ctx.requestInfo);
+    ctx.body = await UserController.askLogin(
+      {
+        email: formattedParams.email,
+        password: formattedParams.password
+      },
+      ctx.requestInfo
+    )
   },
 
   async login(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['email', 'password', 'twoFaCode'])
 
-    const params = pick(ctx.request.body, ['email', 'password', 'twoFaCode']);
+    const formattedParams = await schema.validateParams(UserSchema.login, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.login, params);
-
-    ctx.body = await UserController.login({
-      email: formattedParams.email,
-      password: formattedParams.password,
-      twoFaCode: formattedParams.twoFaCode
-    }, ctx.requestInfo);
+    ctx.body = await UserController.login(
+      {
+        email: formattedParams.email,
+        password: formattedParams.password,
+        twoFaCode: formattedParams.twoFaCode
+      },
+      ctx.requestInfo
+    )
   },
 
   async askResetPassword(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['email'])
 
-    const params = pick(ctx.request.body, ['email']);
+    const formattedParams = await schema.validateParams(UserSchema.askResetPassword, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.askResetPassword, params);
+    await UserController.askResetPassword(formattedParams.email, ctx.requestInfo)
 
-    await UserController.askResetPassword(formattedParams.email, ctx.requestInfo);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
   async resetPassword(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['token', 'newPassword'])
 
-    const params = pick(ctx.request.body, ['token', 'newPassword']);
+    const formattedParams = await schema.validateParams(UserSchema.resetPassword, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.resetPassword, params);
+    await UserController.resetPassword(formattedParams)
 
-    await UserController.resetPassword(formattedParams);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
   async changeEmail(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, ['token'])
 
-    const params = pick(ctx.request.body, ['token']);
+    const formattedParams = await schema.validateParams(UserSchema.changeEmail, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.changeEmail, params);
+    await UserController.changeEmail(formattedParams.token)
 
-    await UserController.changeEmail(formattedParams.token);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
-
-  //////// Verified Auth
+  /// ///// Verified Auth
 
   async getUser(ctx: ParameterizedContext) {
-    ctx.body = ctx.state.user.filterKeys();
+    ctx.body = ctx.state.user.filterKeys()
   },
 
   async updateUser(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, 'firstName', 'lastName', 'avatar', 'termsVersion')
 
-    const params = pick(ctx.request.body, 'firstName', 'lastName', 'avatar', 'termsVersion');
+    const formattedParams = await schema.validateParams(UserSchema.updateUser, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.updateUser, params);
-
-    ctx.body = await UserController.update(ctx.state.user, formattedParams);
+    ctx.body = await UserController.update(ctx.state.user, formattedParams)
   },
 
   async logout(ctx: ParameterizedContext) {
+    await UserController.logout(ctx.state.user, ctx.state.token)
 
-    await UserController.logout(ctx.state.user, ctx.state.token);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
   async changePassword(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, 'oldPassword', 'newPassword')
 
-    const params = pick(ctx.request.body, 'oldPassword', 'newPassword');
+    const formattedParams = await schema.validateParams(UserSchema.changePassword, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.changePassword, params);
+    await UserController.changePassword(ctx.state.user, formattedParams)
 
-    await UserController.changePassword(ctx.state.user, formattedParams);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
   async askTwoFactor(ctx: ParameterizedContext) {
-
-    ctx.body = await UserController.askTwoFactor(ctx.state.user, ctx.requestInfo);
+    ctx.body = await UserController.askTwoFactor(ctx.state.user, ctx.requestInfo)
   },
 
   async enableTwoFactor(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, 'twoFaCode')
 
-    const params = pick(ctx.request.body, 'twoFaCode');
+    const formattedParams = await schema.validateParams(UserSchema.enableTwoFactor, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.enableTwoFactor, params);
+    await UserController.enableTwoFactor(ctx.state.user, formattedParams.twoFaCode, ctx.requestInfo)
 
-    await UserController.enableTwoFactor(ctx.state.user, formattedParams.twoFaCode, ctx.requestInfo);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
   async disableTwoFactor(ctx: ParameterizedContext) {
+    const params = pick(ctx.request.body, 'twoFaCode')
 
-    const params = pick(ctx.request.body, 'twoFaCode');
+    const formattedParams = await schema.validateParams(UserSchema.disableTwoFactor, params)
 
-    const formattedParams = await schema.validateParams(UserSchema.disableTwoFactor, params);
+    await UserController.disableTwoFactor(ctx.state.user, formattedParams.twoFaCode, ctx.requestInfo)
 
-    await UserController.disableTwoFactor(ctx.state.user, formattedParams.twoFaCode, ctx.requestInfo);
-
-    ctx.body = true;
+    ctx.body = true
   },
 
-
   router() {
-    const router = new Router();
-    const authed = AuthMiddleware.authAssert({ isActive: true, verifyEmail: true });
+    const router = new Router()
+    const authed = AuthMiddleware.authAssert({ isActive: true, verifyEmail: true })
 
-
-    //////// NO AUTH
+    /// ///// NO AUTH
 
     /**
      * @api {post} /user/create User creation
@@ -160,7 +150,7 @@ const UsersRouter = {
      * @apiParam {string} rawUser.password
      * @apiParam {boolean} rawUser.terms
      */
-    router.post('/create', UsersRouter.createUser);
+    router.post('/create', UsersRouter.createUser)
 
     /**
      * @api {post} /user/ask-login ask for login
@@ -175,7 +165,7 @@ const UsersRouter = {
      *
      * @apiSuccess {Boolean} result
      */
-    router.post('/ask-login', UsersRouter.askLogin);
+    router.post('/ask-login', UsersRouter.askLogin)
 
     /**
      * @api {post} /user/login Login
@@ -192,7 +182,7 @@ const UsersRouter = {
      * @apiSuccess {string} data.token User Token
      * @apiSuccess {string} data.user User Data
      */
-    router.post('/login', UsersRouter.login);
+    router.post('/login', UsersRouter.login)
 
     /**
      * @api {post} /user/ask-reset-password User send mail reset password
@@ -204,7 +194,7 @@ const UsersRouter = {
      *
      * @apiParam {string} email
      */
-    router.post('/ask-reset-password', UsersRouter.askResetPassword);
+    router.post('/ask-reset-password', UsersRouter.askResetPassword)
 
     /**
      * @api {post} /user/reset-password User reset password
@@ -217,7 +207,7 @@ const UsersRouter = {
      * @apiParam {string} token
      * @apiParam {string} newPassword
      */
-    router.post('/reset-password', UsersRouter.resetPassword);
+    router.post('/reset-password', UsersRouter.resetPassword)
 
     /**
      * @api {post} /user/change-email User change email
@@ -229,10 +219,9 @@ const UsersRouter = {
      *
      * @apiParam {string} token
      */
-    router.post('/change-email', UsersRouter.changeEmail);
+    router.post('/change-email', UsersRouter.changeEmail)
 
-
-    //////// Verified Auth
+    /// ///// Verified Auth
 
     /**
      * @api {put} /user/update User Update
@@ -245,7 +234,7 @@ const UsersRouter = {
      * @apiParam {string} firstName
      * @apiParam {string} lastName
      */
-    router.put('/update', authed, UsersRouter.updateUser);
+    router.put('/update', authed, UsersRouter.updateUser)
 
     /**
      * @api {get} /user/me Get user info
@@ -257,7 +246,7 @@ const UsersRouter = {
      *
      * @apiSuccess {Object} userData
      */
-    router.get('/me', authed, UsersRouter.getUser);
+    router.get('/me', authed, UsersRouter.getUser)
 
     /**
      * @api {get} /user/logout Logout
@@ -269,7 +258,7 @@ const UsersRouter = {
      *
      * @apiSuccess {Boolean} isSuccess
      */
-    router.get('/logout', authed, UsersRouter.logout);
+    router.get('/logout', authed, UsersRouter.logout)
 
     /**
      * @api {post} /user/change-password User change password
@@ -282,7 +271,7 @@ const UsersRouter = {
      * @apiParam {string} oldPassword
      * @apiParam {string} newPassword
      */
-    router.post('/change-password', authed, UsersRouter.changePassword);
+    router.post('/change-password', authed, UsersRouter.changePassword)
 
     /**
      * @api {post} /user/ask-two-factor Ask for a two factor auth code
@@ -296,7 +285,7 @@ const UsersRouter = {
      * @apiSuccess {string} twoFactorData.secret Base32 secret to store
      * @apiSuccess {string} twoFactorData.qrData otpauth URI to display in QR code
      */
-    router.get('/ask-two-factor', authed, UsersRouter.askTwoFactor);
+    router.get('/ask-two-factor', authed, UsersRouter.askTwoFactor)
 
     /**
      * @api {post} /user/enable-two-factor Enable two factor auth
@@ -308,7 +297,7 @@ const UsersRouter = {
      *
      * @apiParam {string} twoFaCode TOTP token
      */
-    router.post('/enable-two-factor', authed, UsersRouter.enableTwoFactor);
+    router.post('/enable-two-factor', authed, UsersRouter.enableTwoFactor)
 
     /**
      * @api {post} /user/disable-two-factor Disable two factor auth
@@ -320,10 +309,10 @@ const UsersRouter = {
      *
      * @apiParam {string} twoFaCode TOTP token
      */
-    router.post('/disable-two-factor', authed, UsersRouter.disableTwoFactor);
+    router.post('/disable-two-factor', authed, UsersRouter.disableTwoFactor)
 
-    return router;
+    return router
   }
-};
+}
 
-export default UsersRouter;
+export default UsersRouter

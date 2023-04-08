@@ -1,15 +1,15 @@
-import { IService } from '@type/system/service';
-import Utils from '@helpers/utils';
-import app from '@api-user/app';
+import { IService } from '@type/system/service'
+import Utils from '@helpers/utils'
+import app from '@api-user/app'
 
 const APIService: IService = {
   NEED_CONNECTIONS: ['postgres', 'mongodb'],
 
-  start() {
-    return app();
+  async start() {
+    return await app()
   },
 
   stop: Utils.noop
-};
+}
 
-export default APIService;
+export default APIService

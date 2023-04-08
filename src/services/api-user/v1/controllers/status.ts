@@ -1,7 +1,7 @@
-import config from '@config';
-import * as moment from 'moment';
-import * as packageJson from '../../../../../package.json';
-import { IAppInfo } from '@type/routers/res/status';
+import config from '@config'
+import * as moment from 'moment'
+import * as packageJson from '../../../../../package.json'
+import { IAppInfo } from '@type/routers/res/status'
 
 const StatusController = {
   get: (): IAppInfo => ({
@@ -13,6 +13,6 @@ const StatusController = {
     appVersionPackage: packageJson.version,
     time: moment().format()
   })
-};
+}
 
-export default StatusController;
+export default StatusController

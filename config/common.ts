@@ -1,5 +1,5 @@
-import utils from '@helpers/utils';
-import { IConfigInterface } from '@type/config/config';
+import utils from '@helpers/utils'
+import { IConfigInterface } from '@type/config/config'
 
 const getConfigObject = (sourceConfig: Record<string, any>): IConfigInterface => {
   return {
@@ -26,7 +26,12 @@ const getConfigObject = (sourceConfig: Record<string, any>): IConfigInterface =>
 
     MONGO_DB: {
       NAME: utils.configParser(sourceConfig, 'string', 'MONGO_DB_NAME', 'db-agreewe'),
-      URI: utils.configParser(sourceConfig, 'string', 'MONGO_DB_URI', 'mongodb://localhost:27017,localhost:27018,localhost:27019?replicaSet=rs&retryWrites=true'),
+      URI: utils.configParser(
+        sourceConfig,
+        'string',
+        'MONGO_DB_URI',
+        'mongodb://localhost:27017,localhost:27018,localhost:27019?replicaSet=rs&retryWrites=true'
+      ),
       DEBUGGER: utils.configParser(sourceConfig, 'bool', 'MONGO_DB_DEBUGGER', true),
       RETRY_CONCURRENT_INTERVAL: utils.configParser(sourceConfig, 'number', 'MONGO_DB_RETRY_CONCURRENT_INTERVAL', 50),
       RETRY_CONCURRENT_TIME: utils.configParser(sourceConfig, 'number', 'MONGO_DB_RETRY_CONCURRENT_TIME', 100)
@@ -39,9 +44,9 @@ const getConfigObject = (sourceConfig: Record<string, any>): IConfigInterface =>
       AWS_KEY: utils.configParser(sourceConfig, 'string', 'AWS_MANAGER_AWS_KEY', 'tf_postgres_credentials')
     },
 
-    COGNITO: {
-      JWK: utils.configParser(sourceConfig, 'string', 'COGNITO_JWK', 'tf_jwk'),
-      CONFIG_KEY: utils.configParser(sourceConfig, 'string', 'COGNITO_CONFIG_KEY', 'tf_cognito_config')
+    ONE_SIGNAL: {
+      API_KEY: utils.configParser(sourceConfig, 'string', 'ONE_SIGNAL_API_KEY', null),
+      APP_ID: utils.configParser(sourceConfig, 'string', 'ONE_SIGNAL_APP_ID', null)
     },
 
     LOG: {
@@ -75,6 +80,4 @@ const getConfigObject = (sourceConfig: Record<string, any>): IConfigInterface =>
   }
 }
 
-export {
-  getConfigObject
-}
+export { getConfigObject }

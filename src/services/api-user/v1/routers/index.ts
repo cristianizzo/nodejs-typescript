@@ -1,20 +1,20 @@
-import * as Router from '@koa/router';
-import StatusRouter from '@api-user/v1/routers/status';
-import UsersRouter from '@api-user/v1/routers/users';
+import * as Router from '@koa/router'
+import StatusRouter from '@api-user/v1/routers/status'
+import UsersRouter from '@api-user/v1/routers/users'
 
 const MainRouter = {
   router() {
-    const usersRouter = UsersRouter.router();
-    const statusRouter = StatusRouter.router();
+    const usersRouter = UsersRouter.router()
+    const statusRouter = StatusRouter.router()
 
-    const mainRouter = new Router();
+    const mainRouter = new Router()
 
-    mainRouter.use(statusRouter.routes(), statusRouter.allowedMethods());
+    mainRouter.use(statusRouter.routes(), statusRouter.allowedMethods())
 
-    mainRouter.use('/user', usersRouter.routes(), usersRouter.allowedMethods());
+    mainRouter.use('/user', usersRouter.routes(), usersRouter.allowedMethods())
 
-    return mainRouter;
+    return mainRouter
   }
-};
+}
 
-export default MainRouter.router();
+export default MainRouter.router()

@@ -1,75 +1,78 @@
-import config from '@config';
-import logger from '@logger';
-import { assert } from '@errors';
-import utils from '@helpers/utils';
-import mongoose, { ClientSession, ClientSessionOptions, ConnectOptions, SaveOptions } from 'mongoose';
-import { retry } from 'ts-retry-promise';
-import loadSchemas from '@mongoModels';
+import config from '@config'
+import logger from '@logger'
+import { assert } from '@errors'
+import utils from '@helpers/utils'
+import mongoose, { ClientSession, ClientSessionOptions, ConnectOptions, SaveOptions } from 'mongoose'
+import { retry } from 'ts-retry-promise'
+import loadSchemas from '@mongoModels'
 
-loadSchemas(mongoose);
+loadSchemas(mongoose)
 
-const llo = logger.logMeta.bind(null, { service: 'mongoDB' });
+const llo = logger.logMeta.bind(null, { service: 'mongoDB' })
 
 const mongoOptions: ConnectOptions = {
   dbName: config.MONGO_DB.NAME,
   autoIndex: false, // Don't build indexes
   maxPoolSize: 50
-};
+}
 
 const retryOptions = {
   retries: 60,
   timeout: 5000,
   delay: 1000
-};
+}
 
 const Mongo = {
   async connect(): Promise<any> {
     mongoose.connection.on('error', (error) => {
-      logger.verbose(`MongoDB connection error`, llo({ error }));
-    });
+      logger.verbose('MongoDB connection error', llo({ error }))
+    })
 
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     mongoose.connection.on('connected', async () => {
       await Promise.all(
         Object.keys(mongoose.models).map(async (name) => {
-          await mongoose.models[name].syncIndexes();
+          await mongoose.models[name].syncIndexes()
         })
-      );
+      )
 
-      logger.info(`MongoDB connected`, llo({ env: config.NODE_ENV }));
-    });
+      logger.info('MongoDB connected', llo({ env: config.NODE_ENV }))
+    })
 
-    mongoose.set('debug', config.MONGO_DB.DEBUGGER);
+    mongoose.set('debug', config.MONGO_DB.DEBUGGER)
 
-    return retry(() => {
-      logger.verbose(`MongoDB try connecting`, llo({
-        url: config.MONGO_DB.URI,
-        name: config.MONGO_DB.NAME
-      }));
+    return await retry(async () => {
+      logger.verbose(
+        'MongoDB try connecting',
+        llo({
+          url: config.MONGO_DB.URI,
+          name: config.MONGO_DB.NAME
+        })
+      )
 
-      return mongoose.connect(config.MONGO_DB.URI, mongoOptions);
-    }, retryOptions);
+      return await mongoose.connect(config.MONGO_DB.URI, mongoOptions)
+    }, retryOptions)
   },
 
   async disconnect(): Promise<void> {
-    await mongoose.disconnect();
-    logger.verbose('MongoDB disconnect', llo({}));
+    await mongoose.disconnect()
+    logger.verbose('MongoDB disconnect', llo({}))
   },
 
   isErrorConflict(error: any) {
-    return error.message.includes('WriteConflict');
+    return error.message.includes('WriteConflict')
   },
 
   isErrorNotSupported(error: any) {
-    return error.message.includes('Current topology does not support sessions');
+    return error.message.includes('Current topology does not support sessions')
   },
 
   async transactionOptions(): Promise<ClientSession> {
-    const session = await mongoose.connection.startSession({
+    // eslint-disable-next-line
+    return mongoose.connection.startSession({
       readConcern: { level: 'snapshot' },
       writeConcern: { w: 'majority' }
-    } as ClientSessionOptions);
-
-    return session;
+    } as ClientSessionOptions)
   },
 
   /*
@@ -79,59 +82,58 @@ const Mongo = {
  */
   async executeTxFn(fn: any): Promise<any> {
     async function tryFn() {
-      const session = await Mongo.transactionOptions();
+      const session = await Mongo.transactionOptions()
 
-      session.startTransaction();
+      session.startTransaction()
 
-      const tOpts: SaveOptions = { session };
+      const tOpts: SaveOptions = { session }
 
       try {
-        return await fn(tOpts);
+        return fn(tOpts)
       } catch (error: any) {
         if (error.hasEnded) {
-          throw error;
+          throw error
         }
 
         try {
-          await session.abortTransaction();
-          await session.endSession();
+          await session.abortTransaction()
+          await session.endSession()
         } catch (errorRollback) {
-          logger.warn('unable to rollback transaction - manual review', llo({ error: errorRollback }));
+          logger.warn('unable to rollback transaction - manual review', llo({ error: errorRollback }))
         }
 
-        throw error;
+        throw error
       }
     }
 
     try {
-      return await tryFn();
+      return await tryFn()
     } catch (error) {
-      return await Mongo.handleTxError(error, tryFn);
+      return await Mongo.handleTxError(error, tryFn)
     }
   },
 
   async handleTxError(error: any, retryFn: any, i = 0): Promise<any> {
     if (Mongo.isErrorConflict(error)) {
-      logger.warn('mongodb concurrent error', llo({ error }));
+      logger.warn('mongodb concurrent error', llo({ error }))
 
-      assert(i < config.MONGO_DB.RETRY_CONCURRENT_INTERVAL, 'mongodb_concurrent', { errorMongoDb: error });
+      assert(i < config.MONGO_DB.RETRY_CONCURRENT_INTERVAL, 'mongodb_concurrent', { errorMongoDb: error })
 
-      await utils.wait(Math.round(Math.random() * config.MONGO_DB.RETRY_CONCURRENT_TIME) + 100);
+      await utils.wait(Math.round(Math.random() * config.MONGO_DB.RETRY_CONCURRENT_TIME) + 100)
 
       try {
-        return await retryFn();
+        return retryFn()
       } catch (error) {
-        return await Mongo.handleTxError(error, retryFn, ++i);
+        return await Mongo.handleTxError(error, retryFn, ++i)
       }
     } else if (Mongo.isErrorNotSupported(error)) {
-      logger.warn('mongodb atomic transaction not supported error', llo({ error }));
+      logger.warn('mongodb atomic transaction not supported error', llo({ error }))
 
-      throw error;
+      throw error
     } else {
-      throw error;
+      throw error
     }
   }
+}
 
-};
-
-export default Mongo;
+export default Mongo

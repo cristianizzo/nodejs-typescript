@@ -1,13 +1,13 @@
-import { Document, Model, Mongoose, SaveOptions, Schema } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
-import * as _ from 'lodash';
-import ModelsUtils from '../utils/models';
-import * as moment from 'moment/moment';
+import { Document, Model, Mongoose, SaveOptions, Schema } from 'mongoose'
+import { v4 as uuidv4 } from 'uuid'
+import * as _ from 'lodash'
+import ModelsUtils from '../utils/models'
+import * as moment from 'moment/moment'
 
 export enum ISignatureType {
   Video = 'video',
   Wallet = 'wallet',
-  Otp = 'otp',
+  Otp = 'otp'
 }
 
 export enum IAgreeWeStatus {
@@ -17,53 +17,52 @@ export enum IAgreeWeStatus {
   Signed = 'signed',
   Deploying = 'deploying',
   Deployed = 'deployed',
-  DeployFailed = 'deployFailed',
+  DeployFailed = 'deployFailed'
 }
 
 export enum IBlockchainType {
   Polygon = 'polygon',
   Ethereum = 'ethereum',
-  Solana = 'solana',
+  Solana = 'solana'
 }
 
 interface IAgreeWe extends Document {
-  _id: string;
-  status: IAgreeWeStatus;
-  owner: string;
-  title: string;
-  description: string;
-  structure: any;
-  outline: string;
-  image: string;
-  signatureType: ISignatureType;
-  templateId: string;
-  isLegallyBinding: boolean;
-  isOnBlockchain: boolean;
-  blockchainType: IBlockchainType;
-  tombstone: any;
-  variableConfig: any;
-  agreeweFeeUsd: string;
-  agreeweFeeSol: string;
-  plugins: any;
-  deployedAt: moment.Moment;
-  createdAt: moment.Moment;
-  updatedAt: moment.Moment;
+  _id: string
+  status: IAgreeWeStatus
+  owner: string
+  title: string
+  description: string
+  structure: any
+  outline: string
+  image: string
+  signatureType: ISignatureType
+  templateId: string
+  isLegallyBinding: boolean
+  isOnBlockchain: boolean
+  blockchainType: IBlockchainType
+  tombstone: any
+  variableConfig: any
+  agreeweFeeUsd: string
+  agreeweFeeSol: string
+  plugins: any
+  deployedAt: moment.Moment
+  createdAt: moment.Moment
+  updatedAt: moment.Moment
 
-  reload(tOpts?: object): Promise<IAgreeWe>;
+  reload: (tOpts?: object) => Promise<IAgreeWe>
 
-  update(params: object, tOpts?: object): Promise<IAgreeWe>;
+  update: (params: object, tOpts?: object) => Promise<IAgreeWe>
 
-  filterKeys(): object;
+  filterKeys: () => object
 }
 
 interface IAgreeWeModel extends Model<IAgreeWe> {
-  create(rawUser: object, tOpts?: SaveOptions): Promise<any>;
+  create: (rawUser: object, tOpts?: SaveOptions) => Promise<any>
 
-  findByEmail(email: string, tOpts?: SaveOptions): Promise<IAgreeWe>;
+  findByEmail: (email: string, tOpts?: SaveOptions) => Promise<IAgreeWe>
 }
 
-export default function(mongoose: Mongoose): IAgreeWeModel {
-
+export default function (mongoose: Mongoose): IAgreeWeModel {
   const agreeWeSchema = new Schema<IAgreeWe>(
     {
       _id: {
@@ -93,49 +92,45 @@ export default function(mongoose: Mongoose): IAgreeWeModel {
     {
       timestamps: true
     }
-  );
+  )
 
-  agreeWeSchema.index({ createdAt: 1 });
+  agreeWeSchema.index({ createdAt: 1 })
 
   agreeWeSchema.statics = {
     async create(raw: any, tOpts: SaveOptions): Promise<any> {
-      const rawObj = new this(raw);
-      return rawObj.save(tOpts);
+      const rawObj = new this(raw)
+      return await rawObj.save(tOpts)
     }
-  };
+  }
 
   agreeWeSchema.methods = {
     async reload(tOpts: SaveOptions) {
-      return this.model('user').findOne({ _id: this._id }).exec(tOpts);
+      return this.model('user').findOne({ _id: this._id }).exec(tOpts)
     },
 
     async update(params: any = {}, tOpts: SaveOptions) {
       Object.entries(params).forEach(([key, value]) => {
         if (this.schema.tree[key]) {
           if (!this.schema.tree[key].required || (this.schema.tree[key].required && value)) {
-            const parsedObj = this.toObject();
+            const parsedObj = this.toObject()
 
             if (!_.isEqual(parsedObj[key], value)) {
-              this[key] = value;
+              this[key] = value
             }
           }
         }
-      });
+      })
 
-      await this.save(tOpts);
+      await this.save(tOpts)
 
-      return this.reload(tOpts);
+      return this.reload(tOpts)
     },
 
     filterKeys() {
-      const obj = this.toObject();
-      const filtered: any = _.pick(obj, '_id', 'disabledAt', 'createdAt');
-
-      return filtered;
+      const obj = this.toObject()
+      return _.pick(obj, '_id', 'disabledAt', 'createdAt')
     }
-  };
+  }
 
-  return mongoose.model<IAgreeWe, IAgreeWeModel>('agreeWe', agreeWeSchema);
-
+  return mongoose.model<IAgreeWe, IAgreeWeModel>('agreeWe', agreeWeSchema)
 }
-

@@ -1,9 +1,10 @@
-import { DataTypes, Sequelize } from 'sequelize';
-import { IUserRoleAttribute, IUserRoleInstance } from '@type/db/db';
+import { DataTypes, Sequelize } from 'sequelize'
+import { IUserRoleAttribute, IUserRoleInstance } from '@type/db/db'
 
-export default function(sequelize: Sequelize): IUserRoleInstance {
-
-  const UserRole = sequelize.define<IUserRoleAttribute>('UserRole', {
+export default function (sequelize: Sequelize): IUserRoleInstance {
+  const UserRole = sequelize.define<IUserRoleAttribute>(
+    'UserRole',
+    {
       id: {
         type: DataTypes.STRING,
         primaryKey: true
@@ -12,7 +13,8 @@ export default function(sequelize: Sequelize): IUserRoleInstance {
     {
       freezeTableName: true,
       timestamps: false
-    }) as IUserRoleInstance;
+    }
+  ) as IUserRoleInstance
 
-  return UserRole;
-};
+  return UserRole
+}

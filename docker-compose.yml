@@ -44,7 +44,7 @@ services:
   mongodb:
     image: mongo
     ports:
-      - "27017:27017"
+      - '27017:27017'
     networks:
       - agreewe-local
 
@@ -56,7 +56,7 @@ services:
       POSTGRES_DB: db-agreewe
       POSTGRES_HOST_AUTH_METHOD: password
     ports:
-      - "5432:5432"
+      - '5432:5432'
     networks:
       - agreewe-local
 
@@ -65,16 +65,16 @@ services:
   unit:
     build:
       context: ./
-    command: [ 'yarn', 'test:unit' ]
+    command: ['yarn', 'test:unit']
 
   ### Missing only in test
 
   dotonly:
     build:
       context: ./
-    command: [ 'yarn', 'test:dotonly' ]
+    command: ['yarn', 'test:dotonly']
 
   linter:
     build:
       context: ./
-    command: [ 'yarn', 'lint' ]
+    command: ['yarn', 'lint']

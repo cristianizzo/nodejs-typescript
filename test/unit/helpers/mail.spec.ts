@@ -1,63 +1,60 @@
-import * as sinon from 'sinon';
-import { expect } from 'chai';
-import config from '@config';
-import Mail from '@helpers/mail';
-import logger from '@modules/logger';
-import { IEnumEnvironment } from '@type/config/config';
-import axios from 'axios';
+import * as sinon from 'sinon'
+import { expect } from 'chai'
+import config from '@config'
+import Mail from '@helpers/mail'
+import logger from '@modules/logger'
+import { IEnumEnvironment } from '@type/config/config'
+import axios from 'axios'
 
 describe('Helpers: Mail', () => {
-  let sandbox: any = null;
-  let stubSendgridSend: any;
-  let oldRemoteExec: boolean;
-  let oldEnable: boolean;
-  let oldApi: string;
+  let sandbox: any = null
+  let stubSendgridSend: any
+  let oldRemoteExec: boolean
+  let oldEnable: boolean
+  let oldApi: string
 
   beforeEach(async () => {
-    sandbox = sinon.createSandbox();
+    sandbox = sinon.createSandbox()
 
     // stubSendgridSend = sandbox.stub(Utils.axios);
-    stubSendgridSend = sandbox.stub(axios, 'post').resolves();
+    stubSendgridSend = sandbox.stub(axios, 'post').resolves()
 
-    oldEnable = config.MAIL.SENDGRID_ENABLED;
-    oldRemoteExec = config.REMOTE_EXECUTION;
-    oldApi = config.MAIL.SENDGRID_API_KEY;
-    config.MAIL.SENDGRID_ENABLED = true;
-    config.REMOTE_EXECUTION = true;
-    config.MAIL.SENDGRID_API_KEY = 'xxx';
-  });
+    oldEnable = config.MAIL.SENDGRID_ENABLED
+    oldRemoteExec = config.REMOTE_EXECUTION
+    oldApi = config.MAIL.SENDGRID_API_KEY
+    config.MAIL.SENDGRID_ENABLED = true
+    config.REMOTE_EXECUTION = true
+    config.MAIL.SENDGRID_API_KEY = 'xxx'
+  })
 
   afterEach(async () => {
-    config.MAIL.SENDGRID_ENABLED = oldEnable;
-    config.REMOTE_EXECUTION = oldRemoteExec;
-    config.MAIL.SENDGRID_API_KEY = oldApi;
-    sandbox && sandbox.restore();
-  });
+    config.MAIL.SENDGRID_ENABLED = oldEnable
+    config.REMOTE_EXECUTION = oldRemoteExec
+    config.MAIL.SENDGRID_API_KEY = oldApi
+    sandbox?.restore()
+  })
 
   it('Should _rpCall', async () => {
-    stubSendgridSend.resolves();
+    stubSendgridSend.resolves()
     const fakeBody: any = {
       test: 1
-    };
+    }
 
-    await Mail._rpCall(fakeBody);
+    await Mail._rpCall(fakeBody)
 
-    expect(stubSendgridSend.calledOnce).to.be.true;
+    expect(stubSendgridSend.calledOnce).to.be.true
     expect(
-      stubSendgridSend.calledWith(config.MAIL.SENDGRID_URI,
-        fakeBody,
-        {
-          headers: {
-            Authorization: `Bearer ${config.MAIL.SENDGRID_API_KEY}`
-          }
+      stubSendgridSend.calledWith(config.MAIL.SENDGRID_URI, fakeBody, {
+        headers: {
+          Authorization: `Bearer ${config.MAIL.SENDGRID_API_KEY}`
         }
-      )
-    ).to.be.true;
-  });
+      })
+    ).to.be.true
+  })
 
   it('Should send mail simple', async () => {
-    const spyLog = sandbox.spy(logger, 'verbose');
-    const spySend = sandbox.spy(Mail, '_send');
+    const spyLog = sandbox.spy(logger, 'verbose')
+    const spySend = sandbox.spy(Mail, '_send')
     const res = await Mail.send(
       {
         toEmail: 'email1',
@@ -66,10 +63,10 @@ describe('Helpers: Mail', () => {
         templateId: 'xxx'
       },
       { test: 1 }
-    );
+    )
 
-    expect(spyLog.calledOnce).to.be.true;
-    expect(spySend.calledOnce).to.be.true;
+    expect(spyLog.calledOnce).to.be.true
+    expect(spySend.calledOnce).to.be.true
     expect(
       spySend.calledWith(
         {
@@ -80,11 +77,11 @@ describe('Helpers: Mail', () => {
         },
         { test: 1 }
       )
-    ).to.be.true;
+    ).to.be.true
 
-    expect(res).to.be.true;
-    expect(stubSendgridSend.calledOnce).to.be.true;
-    expect(stubSendgridSend.args[0][0]).to.eq(config.MAIL.SENDGRID_URI);
+    expect(res).to.be.true
+    expect(stubSendgridSend.calledOnce).to.be.true
+    expect(stubSendgridSend.args[0][0]).to.eq(config.MAIL.SENDGRID_URI)
 
     expect(stubSendgridSend.args[0][1]).to.be.deep.eq({
       content: [
@@ -115,7 +112,7 @@ describe('Helpers: Mail', () => {
               name: 'name1'
             }
           ],
-          subject: `[local] test`,
+          subject: '[local] test',
           headers: {
             'X-Accept-Language': 'en',
             'X-Mailer': 'AgreeWe'
@@ -128,15 +125,15 @@ describe('Helpers: Mail', () => {
           }
         }
       ]
-    });
-  });
+    })
+  })
 
   it('Should send mail with all params', async () => {
-    const spyLog = sandbox.spy(logger, 'verbose');
-    const spySend = sandbox.spy(Mail, '_send');
+    const spyLog = sandbox.spy(logger, 'verbose')
+    const spySend = sandbox.spy(Mail, '_send')
 
-    const attachments = 'fake-attachments';
-    const calEvent = 'xxx';
+    const attachments = 'fake-attachments'
+    const calEvent = 'xxx'
 
     const res = await Mail.send(
       {
@@ -152,10 +149,10 @@ describe('Helpers: Mail', () => {
         calEvent
       },
       { test: 1 }
-    );
+    )
 
-    expect(spyLog.calledOnce).to.be.true;
-    expect(spySend.calledOnce).to.be.true;
+    expect(spyLog.calledOnce).to.be.true
+    expect(spySend.calledOnce).to.be.true
     expect(
       spySend.calledWith(
         {
@@ -172,10 +169,10 @@ describe('Helpers: Mail', () => {
         },
         { test: 1 }
       )
-    ).to.be.true;
+    ).to.be.true
 
-    expect(res).to.be.true;
-    expect(stubSendgridSend.calledOnce).to.be.true;
+    expect(res).to.be.true
+    expect(stubSendgridSend.calledOnce).to.be.true
 
     expect(stubSendgridSend.args[0][1]).to.be.deep.eq({
       content: [
@@ -188,7 +185,7 @@ describe('Helpers: Mail', () => {
           value: calEvent
         }
       ],
-      template_id: `templateId1`,
+      template_id: 'templateId1',
       mail_settings: {
         sandbox_mode: {
           enable: false
@@ -211,7 +208,7 @@ describe('Helpers: Mail', () => {
               name: 'name1'
             }
           ],
-          subject: `[local] test`,
+          subject: '[local] test',
           headers: {
             'X-Accept-Language': 'en',
             'X-Mailer': 'AgreeWe'
@@ -226,75 +223,75 @@ describe('Helpers: Mail', () => {
           }
         }
       ]
-    });
-  });
+    })
+  })
 
   it('Should not send mail in local', async () => {
-    config.REMOTE_EXECUTION = false;
+    config.REMOTE_EXECUTION = false
 
     const res = await Mail.send({
       toEmail: 'email1',
       toName: 'name1'
-    });
+    })
 
-    expect(res).to.be.false;
-    expect(stubSendgridSend.callCount).to.eq(0);
-  });
+    expect(res).to.be.false
+    expect(stubSendgridSend.callCount).to.eq(0)
+  })
 
   it('Should add environment prefix if environment is not production', async () => {
-    const oldEnv = config.ENVIRONMENT;
+    const oldEnv = config.ENVIRONMENT
 
-    config.ENVIRONMENT = IEnumEnvironment.dev;
+    config.ENVIRONMENT = IEnumEnvironment.dev
 
     const res = await Mail.send({
       toEmail: 'email1',
       toName: 'name1'
-    });
-    expect(res).to.be.true;
+    })
+    expect(res).to.be.true
 
-    expect(stubSendgridSend.args[0][1].personalizations[0].dynamic_template_data.env).to.eq('[dev] ');
+    expect(stubSendgridSend.args[0][1].personalizations[0].dynamic_template_data.env).to.eq('[dev] ')
 
-    config.ENVIRONMENT = IEnumEnvironment.prod;
+    config.ENVIRONMENT = IEnumEnvironment.prod
 
     await Mail.send({
       toEmail: 'email1',
       toName: 'name1'
-    });
-    expect(stubSendgridSend.args[1][1].personalizations[0].dynamic_template_data.env).to.eq('');
+    })
+    expect(stubSendgridSend.args[1][1].personalizations[0].dynamic_template_data.env).to.eq('')
 
-    config.ENVIRONMENT = oldEnv;
-  });
+    config.ENVIRONMENT = oldEnv
+  })
 
   it('Should catch error', async () => {
     const opts = {
       toEmail: 'email',
       toName: 'name'
-    };
+    }
 
-    const stubLogger = sandbox.stub(logger, 'error');
-    stubSendgridSend.rejects(new Error('fake-error'));
+    const stubLogger = sandbox.stub(logger, 'error')
+    stubSendgridSend.rejects(new Error('fake-error'))
 
-    const response = await Mail.send(opts);
-    expect(response).be.false;
+    const response = await Mail.send(opts)
+    expect(response).be.false
 
-    expect(stubLogger.calledOnce).to.be.true;
-    expect(stubLogger.calledWith('Failed to send mail')).to.be.true;
-  });
+    expect(stubLogger.calledOnce).to.be.true
+    expect(stubLogger.calledWith('Failed to send mail')).to.be.true
+  })
 
   it('Should not sent if sendgrid disabled', async () => {
-    const oldEnv = config.MAIL.SENDGRID_ENABLED;
-    config.MAIL.SENDGRID_ENABLED = false;
+    const oldEnv = config.MAIL.SENDGRID_ENABLED
+    config.MAIL.SENDGRID_ENABLED = false
 
     const opts = {
       toEmail: 'email',
       toName: 'name'
-    };
+    }
 
-    const spySend = sandbox.spy(Mail, '_send');
+    const spySend = sandbox.spy(Mail, '_send')
 
-    await Mail.send(opts);
+    await Mail.send(opts)
 
-    expect(spySend.notCalled).to.be.true;
-    config.MAIL.SENDGRID_ENABLED = oldEnv;
-  });
-});
+    expect(spySend.notCalled).to.be.true
+    config.MAIL.SENDGRID_ENABLED = oldEnv
+  })
+})
