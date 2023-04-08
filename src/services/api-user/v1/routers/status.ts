@@ -1,6 +1,6 @@
 import * as Router from '@koa/router';
 import StatusController from '@api-user/v1/controllers/status';
-import { IAppInfo } from '../../../../types/routers/res/status';
+import { IAppInfo } from '@type/routers/res/status';
 
 const StatusRouter = {
 

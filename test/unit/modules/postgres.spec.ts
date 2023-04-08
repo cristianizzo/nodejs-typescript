@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import Postgres from '@modules/postgres';
-import { ITxOpts } from '../../../src/types/db/transaction';
+import { ITxOpts } from '@type/db/transaction';
 
 describe('Postgres', () => {
   let sandbox: any = null;

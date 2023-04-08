@@ -1,13 +1,13 @@
-import { IAssertOpts, IJWTData } from '../../../../types/system/middleware';
+import { IAssertOpts, IJWTData } from '@type/system/middleware';
 import * as jwt from 'jsonwebtoken';
 import * as koaJWT from 'koa-jwt';
 import * as moment from 'moment';
 import Models from '@postgresModels';
 import logger from '@logger';
 import config from '@config';
-import { ITxOpts } from '../../../../types/db/transaction';
-import { IRequestInfo } from '../../../../types/system/requestInfo';
-import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '../../../../types/db/db';
+import { ITxOpts } from '@type/db/transaction';
+import { IRequestInfo } from '@type/system/requestInfo';
+import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '@type/db/db';
 import { Next, ParameterizedContext } from 'koa';
 import { assertExposable, throwError } from '@helpers/errors';
 
@@ -58,9 +58,9 @@ const AuthMiddleware = {
 
   /**
    * @param {object} opts
-   * @param {bool} [opts.active]  Only allow active users
-   * @param {bool} [opts.verify]  Only allow verified users
-   * @param {bool} [opts.kyc]     Only allow kyc passed users
+   * @param {boolean} [opts.active]  Only allow active users
+   * @param {boolean} [opts.verify]  Only allow verified users
+   * @param {boolean} [opts.kyc]     Only allow kyc passed users
    */
   authAssert: (opts: IAssertOpts = {}) => async (ctx: ParameterizedContext, next: Next): Promise<Next> => {
 

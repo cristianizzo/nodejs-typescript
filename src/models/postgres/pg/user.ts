@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DataTypes, Sequelize } from 'sequelize';
-import { IEnumTokenType, ITokenAttribute, IUserAttribute, IUserInstance } from '../../../types/db/db';
-import { ITxOpts } from '../../../types/db/transaction';
+import { IEnumTokenType, ITokenAttribute, IUserAttribute, IUserInstance } from '@type/db/db';
+import { ITxOpts } from '@type/db/transaction';
 import crypto from '@helpers/crypto';
 import * as moment from 'moment';
 import { pick } from 'lodash';
-import { IUserRes } from '../../../types/routers/res/user';
+import { IUserRes } from '@type/routers/res/user';
 
 export default function(sequelize: Sequelize): IUserInstance {
 

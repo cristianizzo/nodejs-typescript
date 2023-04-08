@@ -2,12 +2,12 @@ import { v4 as uuidv4 } from 'uuid';
 import * as moment from 'moment';
 import * as speakeasy from 'speakeasy';
 import { DataTypes, Sequelize } from 'sequelize';
-import { IEnumTokenType, ITokenAttribute, ITokenInstance, IUserAttribute } from '../../../types/db/db';
+import { IEnumTokenType, ITokenAttribute, ITokenInstance, IUserAttribute } from '@type/db/db';
 import { assert, assertExposable } from '@helpers/errors';
 import Utils from '@helpers/utils';
 import crypto from '@helpers/crypto';
 import config from '@config';
-import { ITxOpts } from '../../../types/db/transaction';
+import { ITxOpts } from '@type/db/transaction';
 
 export default function(sequelize: Sequelize): ITokenInstance {
 

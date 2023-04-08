@@ -1,4 +1,4 @@
-import { IServiceEvent } from '../types/system/serviceEvent';
+import { IServiceEvent } from '@type/system/serviceEvent';
 import Runner from '@modules/runner';
 import app from './app';
 

@@ -1,5 +1,5 @@
 import utils from '@helpers/utils';
-import { IConfigInterface } from '../src/types/config/config';
+import { IConfigInterface } from '@type/config/config';
 
 const getConfigObject = (sourceConfig: Record<string, any>): IConfigInterface => {
   return {

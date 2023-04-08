@@ -1,5 +1,5 @@
 import * as Koa from 'koa';
-import { IServiceEvent } from './serviceEvent';
+import { IServiceEvent } from '@type/system/serviceEvent';
 
 export type IService = {
   NEED_CONNECTIONS: any;

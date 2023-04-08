@@ -2,7 +2,7 @@ import axios from 'axios';
 import config from '@config';
 import logger from '@logger';
 import { assert } from '@errors';
-import { IEnumEnvironment } from '../types/config/config';
+import { IEnumEnvironment } from '@type/config/config';
 
 const llo = logger.logMeta.bind(null, { service: 'mail' });
 

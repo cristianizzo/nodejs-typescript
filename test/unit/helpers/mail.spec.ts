@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import config from '@config';
 import Mail from '@helpers/mail';
 import logger from '@modules/logger';
-import { IEnumEnvironment } from '../../../src/types/config/config';
+import { IEnumEnvironment } from '@type/config/config';
 import axios from 'axios';
 
 describe('Helpers: Mail', () => {

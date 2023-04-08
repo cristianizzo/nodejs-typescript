@@ -1,7 +1,7 @@
 import config from '@config';
 import * as moment from 'moment';
 import * as packageJson from '../../../../../package.json';
-import { IAppInfo } from '../../../../types/routers/res/status';
+import { IAppInfo } from '@type/routers/res/status';
 
 const StatusController = {
   get: (): IAppInfo => ({

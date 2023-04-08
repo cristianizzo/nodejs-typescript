@@ -1,5 +1,5 @@
 import { DataTypes, Sequelize } from 'sequelize';
-import { IUserRoleAttribute, IUserRoleInstance } from '../../../types/db/db';
+import { IUserRoleAttribute, IUserRoleInstance } from '@type/db/db';
 
 export default function(sequelize: Sequelize): IUserRoleInstance {
 

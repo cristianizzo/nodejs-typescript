@@ -4,7 +4,7 @@ import config from '@config';
 import { setModels } from '@models/postgres/utils/setModels';
 import { assert } from '@helpers/errors';
 import Utils from '@helpers/utils';
-import { ITxOpts } from '../types/db/transaction';
+import { ITxOpts } from '@type/db/transaction';
 import ISOLATION_LEVELS = Transaction.ISOLATION_LEVELS;
 
 const llo = logger.logMeta.bind(null, { service: 'postgres' });

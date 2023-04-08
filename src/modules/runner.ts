@@ -1,5 +1,5 @@
 import '@helpers/monitoring';
-import { IService } from '../types/system/service';
+import { IService } from '@type/system/service';
 import logger from '@logger';
 import Connections from '@modules/connections';
 

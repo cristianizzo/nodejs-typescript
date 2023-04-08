@@ -1,5 +1,5 @@
 import { DataTypes, Sequelize } from 'sequelize';
-import { IUserNotificationAttribute, IUserNotificationInstance } from '../../../types/db/db';
+import { IUserNotificationAttribute, IUserNotificationInstance } from '@type/db/db';
 
 export default function(sequelize: Sequelize): IUserNotificationInstance {
 

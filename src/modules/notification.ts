@@ -1,8 +1,8 @@
-import { IRequestInfo } from '../types/system/requestInfo';
-import { IEnumEnvironment } from '../types/config/config';
+import { IRequestInfo } from '@type/system/requestInfo';
+import { IEnumEnvironment } from '@type/config/config';
 import config from '@config';
 import Mail from '@helpers/mail';
-import { IUserRes } from '../types/routers/res/user';
+import { IUserRes } from '@type/routers/res/user';
 // import PushNotification from "../helpers/pushNotification";
 
 const Notification = {

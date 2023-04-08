@@ -2,7 +2,7 @@ import config from '@config';
 import Models from '@postgresModels';
 import { assertExposable, throwExposable } from '@errors';
 import Utils from '@helpers/utils';
-import { IRequestInfo } from '../../../../types/system/requestInfo';
+import { IRequestInfo } from '@type/system/requestInfo';
 import {
   IAskLogin,
   IChangePassword,
@@ -10,18 +10,18 @@ import {
   IResetPassword,
   ISignup,
   IUpdateUser
-} from '../../../../types/routers/req/user';
-import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '../../../../types/db/db';
-import Postgres from '../../../../modules/postgres';
-import { ITxOpts } from '../../../../types/db/transaction';
-import { IEnumEnvironment } from '../../../../types/config/config';
+} from '@type/routers/req/user';
+import { IEnumTokenType, ITokenAttribute, IUserAttribute } from '@type/db/db';
+import Postgres from '@modules/postgres';
+import { ITxOpts } from '@type/db/transaction';
+import { IEnumEnvironment } from '@type/config/config';
 import {
   IAskTwoFactorRes,
   IEnumLoginType,
   ILoginRes,
   ILoginTypeRes,
   IUserRes
-} from '../../../../types/routers/res/user';
+} from '@type/routers/res/user';
 import * as moment from 'moment';
 import logger from '@logger';
 import AuthMiddleware from '@api-user/v1/middlewares/auth';

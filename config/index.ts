@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { IConfigInterface } from "../src/types/config/config";
+import { IConfigInterface } from "@type/config/config";
 import { getConfigObject } from "./common";
 
 dotenv.config();
