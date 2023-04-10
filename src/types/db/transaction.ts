@@ -1,9 +1,10 @@
-import { Transaction} from 'sequelize';
+import { Transaction } from 'sequelize'
 
-interface ITransaction extends Transaction {
-  finished: string;
+export interface ITransaction extends Transaction {
+  id?: string
+  finished: string
 }
 
 export interface ITxOpts {
-  transaction: ITransaction;
+  transaction: ITransaction
 }

@@ -1,71 +1,71 @@
-import Transport from 'winston-transport';
-import logzioNodejs from 'logzio-nodejs';
-import * as Sentry from '@sentry/node';
-import Format from './format';
-import config from '../../../config';
+import * as Transport from 'winston-transport'
+import * as logNodejs from 'logzio-nodejs'
+import * as Sentry from '@sentry/node'
+import Format from '@modules/logger/format'
+import config from '@config'
 
 interface ExternalLoggerOptions extends Transport.TransportStreamOptions {
-  name?: string;
-  level?: string;
+  name?: string
+  level?: string
 }
 
 class ExternalLogger extends Transport {
-  private readonly logzioLogger?: any;
-  private readonly sentry?: typeof Sentry;
+  private readonly logzioLogger?: any
+  private readonly sentry?: typeof Sentry
 
   constructor(opts?: ExternalLoggerOptions) {
-    super(opts);
+    super(opts)
 
     if (config.LOG.LOGZIO_KEY) {
-      this.logzioLogger = logzioNodejs.createLogger({
+      this.logzioLogger = logNodejs.createLogger({
         token: config.LOG.LOGZIO_KEY,
         host: config.LOG.LOGZIO_HOST,
         type: config.LOG.LOGZIO_SERVER_NAME,
-        protocol: 'https',
-      });
+        protocol: 'https'
+      })
     }
 
     if (config.LOG.SENTRY_DSN) {
-      this.sentry = Sentry;
+      this.sentry = Sentry
       this.sentry.init({
         dsn: config.LOG.SENTRY_DSN,
         serverName: config.LOG.LOGZIO_SERVER_NAME,
-        environment: config.ENVIRONMENT,
-      });
+        environment: config.ENVIRONMENT
+      })
     }
   }
 
   end(...args: any[]): any {
-    return super.end(...args);
+    return super.end(...args)
   }
 
   log(info: any, callback: () => void) {
-    const msg = Format.formatMeta(info);
+    const msg = Format.formatMeta(info)
 
     if (this.logzioLogger) {
-      this.logzioLogger.log(msg);
+      this.logzioLogger.log(msg)
     }
 
-    if (info.level === 'error' && this.sentry && info.error instanceof Error && !info.error.exposeCustom_) {
-      info.error.message = `${info.message} - ${info.error.message}`;
-      this.sentry.setExtra('info', info);
-      this.sentry.captureMessage(info.error);
+    if (info.level === 'error' && this.sentry != null && info.error instanceof Error && !info.error.exposeCustom_) {
+      info.error.message = `${info.message} - ${info.error.message}`
+      this.sentry.setExtra('info', info)
+      this.sentry.captureMessage(info.error)
     }
 
-    callback();
+    callback()
   }
 
   purge() {
     if (this.logzioLogger) {
-      this.logzioLogger.sendAndClose();
+      this.logzioLogger.sendAndClose()
     }
 
-    if (this.sentry) {
-      this.sentry.close();
+    if (this.sentry != null) {
+      this.sentry.close() // eslint-disable-line
     }
 
-    return true;
+    return true
   }
 }
 
-export default ExternalLogger;
+export default ExternalLogger

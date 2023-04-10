@@ -1,0 +1,80 @@
+version: '3.7'
+
+networks:
+  agreewe-local:
+    driver: bridge
+
+services:
+  ### Services
+
+  service-main:
+    build:
+      context: ./
+    ports:
+      - ${SERVICE_API_USER_PORT:-3000}:${SERVICE_API_USER_PORT:-3000}
+    environment:
+      PORT: ${SERVICE_API_USER_PORT:-3000}
+    depends_on:
+      - mongodb
+      - postgres
+    env_file:
+      - ./docker.env
+    command: bash -c 'yarn wait:postgres & yarn wait:mongodb & wait && yarn service:main'
+    networks:
+      - agreewe-local
+
+  service-api-user:
+    build:
+      context: ./
+    ports:
+      - ${SERVICE_API_USER_PORT:-3000}:${SERVICE_API_USER_PORT:-3000}
+    environment:
+      PORT: ${SERVICE_API_USER_PORT:-3000}
+    depends_on:
+      - mongodb
+      - postgres
+    env_file:
+      - ./docker.env
+    command: bash -c 'yarn wait:postgres & yarn wait:mongodb & wait && ls && yarn service:api-user'
+    networks:
+      - agreewe-local
+
+  ### Dependencies
+
+  mongodb:
+    image: mongo
+    ports:
+      - '27017:27017'
+    networks:
+      - agreewe-local
+
+  postgres:
+    image: postgres:12.9-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db-agreewe
+      POSTGRES_HOST_AUTH_METHOD: password
+    ports:
+      - '5432:5432'
+    networks:
+      - agreewe-local
+
+  ### Tests
+
+  unit:
+    build:
+      context: ./
+    command: ['yarn', 'test:unit']
+
+  ### Missing only in test
+
+  dotonly:
+    build:
+      context: ./
+    command: ['yarn', 'test:dotonly']
+
+  linter:
+    build:
+      context: ./
+    command: ['yarn', 'lint']

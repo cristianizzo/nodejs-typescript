@@ -1,4 +1,4 @@
 export interface IServiceEvent {
-  request: any;
+  request: any
   triggerSource: string
 }

@@ -1,9 +1,9 @@
-import dotenv from 'dotenv';
-import {IConfigInterface} from '../src/types/config/config';
-import {getConfigObject} from './common';
+import * as dotenv from 'dotenv'
+import { IConfigInterface } from '@type/config/config'
+import { getConfigObject } from './common'
 
-dotenv.config();
+dotenv.config()
 
-const config: IConfigInterface = getConfigObject(process.env);
+const config: IConfigInterface = getConfigObject(process.env)
 
-export default config;
+export default config

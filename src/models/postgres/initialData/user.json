@@ -1,0 +1,17 @@
+[
+  {
+    "model": "User",
+    "data": {
+      "id": "00aa0a00-0a0a-0000-0000-0a000a0aaa00",
+      "firstName": "AgreeWe Platform Bot",
+      "lastName": "AgreeWe Platform Bot",
+      "password": "5794403da3f7026107ba5d8d81f524c4d029710bd9296ff9514929c5ae96e026",
+      "email": "platform-bot@agreewe.com",
+      "isActive": true,
+      "verifyEmail": true,
+      "avatar": "avatarId",
+      "termsVersion": "1.0.0",
+      "RoleId": "FULL_ACCESS"
+    }
+  }
+]
