@@ -1,5 +1,4 @@
 import { IAssertOpts, IJWTData } from '@type/system/middleware'
-import * as jwt from 'jsonwebtoken'
 import * as koaJWT from 'koa-jwt'
 import * as moment from 'moment'
 import { ITxOpts } from '@type/db/transaction'
@@ -9,12 +8,13 @@ import { Next, ParameterizedContext } from 'koa'
 import { assertExposable, throwError } from '@helpers/errors'
 import Models from '@postgresModels'
 import config from '@config'
+import { sign } from '@helpers/jwt'
 
 const JWT_KEY = 'jwt'
 
 const AuthMiddleware = {
   generateJWT: (jwtData: IJWTData): string => {
-    return jwt.sign(jwtData, config.JWT_SECRET)
+    return sign(jwtData, config.JWT_SECRET)
   },
 
   generateJWTLogin: (tokenValue: string, userAgent?: any): string => {

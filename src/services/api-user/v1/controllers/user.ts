@@ -35,7 +35,7 @@ const UserController = {
         }
       }
 
-      const newUser = await Models.User.create(rawUser as any, tOpts)
+      const newUser = await Models.User.create(rawUser, tOpts)
       await tOpts.transaction.commit()
 
       logger.info('User created', llo({ userId: newUser.id }))
@@ -88,7 +88,6 @@ const UserController = {
     })
 
     if (pinCode) {
-      Utils.setImmediateAsync(async () => await Notification.askLogin(user.filterKeys(), pinCode, opts))
       Utils.setImmediateAsync(async () => await Notification.askLogin(user.filterKeys(), pinCode, opts))
     }
 
@@ -319,6 +318,35 @@ const UserController = {
       secret,
       qrData
     }
+  },
+
+  async askChangeEmail(user, password, newEmail, requestInfo) {
+    await Postgres.executeTxFn(async (tOpts: ITxOpts) => {
+      await user.reload(tOpts)
+
+      const existingEmail = await Models.User.findOne({ where: { email: newEmail } })
+      assertExposable(!existingEmail, 'already_exists', null, null, { userId: user.id, newEmail })
+
+      if (!(await user.validPassword(password))) {
+        throwExposable('bad_credentials')
+      }
+
+      await user.removeTokensByType(IEnumTokenType.CHANGE_EMAIL)
+
+      const token = await Models.Token.createForChangeEmail(user, newEmail, requestInfo)
+      Utils.setImmediateAsync(async () => await Notification.askChangeEmail(user.filterKeys(), newEmail, token.value))
+
+      logger.info(
+        'Sent change email mail',
+        llo({
+          userId: user.id,
+          userEmail: user.email,
+          newUserEmail: newEmail
+        })
+      )
+    })
+
+    return true
   },
 
   async enableTwoFactor(user: IUserAttribute, twoFaCode: string, requestInfo: IRequestInfo): Promise<boolean> {

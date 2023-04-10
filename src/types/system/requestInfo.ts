@@ -7,15 +7,15 @@ export interface IUserAgentInfo {
 }
 
 export interface IRequestInfo {
-  start: number
-  correlationId: string
+  start?: number
+  correlationId?: string
   deviceId?: string
-  path: string
-  method: string
-  ip: string
-  url: string
-  host: string
-  protocol: string
+  path?: string
+  method?: string
+  ip?: string
+  url?: string
+  host?: string
+  protocol?: string
   countryCode?: string
   origin?: string
   userAgentInfo?: IUserAgentInfo

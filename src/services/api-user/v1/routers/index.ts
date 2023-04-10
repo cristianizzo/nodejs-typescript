@@ -17,4 +17,4 @@ const MainRouter = {
   }
 }
 
-export default MainRouter.router()
+export default MainRouter

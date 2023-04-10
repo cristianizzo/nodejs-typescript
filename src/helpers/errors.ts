@@ -35,6 +35,10 @@ const ERRORS: IErrorMap = {
     status: 501,
     description: 'Not implemented'
   },
+  already_exists: {
+    status: 400,
+    description: 'The Entity already exists.'
+  },
   entity_too_large: {
     status: 413,
     description: 'The files you are trying to upload are too big'
@@ -69,7 +73,7 @@ const ERRORS: IErrorMap = {
   },
   two_factor_token_required: {
     status: 404,
-    description: 'This account has enabled two-factor authentication and the token is required'
+    description: 'Please ask for a secret first.'
   },
   two_factor_token_invalid: {
     status: 404,
@@ -81,7 +85,7 @@ const ERRORS: IErrorMap = {
   },
   two_factor_code_invalid: {
     status: 404,
-    description: 'The two-factor token you provided is invalid'
+    description: 'The two-factor authentication code you are trying to use is not valid.'
   },
   token_expired: {
     status: 404,
@@ -93,7 +97,15 @@ const ERRORS: IErrorMap = {
   },
   password_should_be_different: {
     status: 404,
-    description: 'New password should be different'
+    description: 'The old and new password must be different.'
+  },
+  two_factor_already_enable: {
+    status: 404,
+    description: 'The two-factor authentication is already enabled.'
+  },
+  two_factor_not_enabled: {
+    status: 404,
+    description: 'The two-factor authentication must be enabled to perform this action.'
   },
   invalid_token: {
     status: 404,

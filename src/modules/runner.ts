@@ -55,7 +55,6 @@ async function runApps(instances: Array<{ app: IService; event?: any }>) {
 
     await Promise.all(instances.map(async (instance: { app: IService; event?: any }) => await instance.app.start(instance.event)))
   } catch (error) {
-    console.error(error)
     logger.error('Unable to start application', llo({ error }))
     logger.purge()
 

@@ -18,7 +18,8 @@
       "@modules/*": ["./src/modules/*"],
       "@services/*": ["./src/services/*"],
       "@api-user/*": ["./src/services/api-user/*"],
-      "@type/*": ["./src/types/*"]
+      "@type/*": ["./src/types/*"],
+      "@mocks/*": ["./test/mocks/*"]
     },
     "resolveJsonModule": true,
     "allowArbitraryExtensions": true,

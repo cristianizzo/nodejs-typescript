@@ -1,4 +1,4 @@
-import OneSignal from 'onesignal-node'
+import * as OneSignal from 'onesignal-node'
 import config from '../../config'
 import logger from '@logger'
 import * as errors from '../helpers/errors'

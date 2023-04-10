@@ -1,9 +1,14 @@
-import { Context, Next } from 'koa'
+import { Context, Next, Request } from 'koa'
+import { RouterOptions } from '@koa/router'
 import { v4 as uuidv4 } from 'uuid'
 import DeviceInfoMapper from '@helpers/deviceInfoMapper'
 import logger from '@logger'
 
 const llo = logger.logMeta.bind(null, { service: 'api-user:logger' })
+
+interface RequestContext extends Request {
+  route: RouterOptions
+}
 
 function cleanQuery(query: any) {
   const clean = { ...query }
@@ -25,6 +30,7 @@ export default () => async (ctx: Context, next: Next) => {
     path: ctx.request.path,
     method: ctx.request.method,
     ip: ctx.request.ip,
+    route: (ctx.request as RequestContext).route,
     url: ctx.request.url,
     host: ctx.request.host,
     protocol: ctx.request.protocol,

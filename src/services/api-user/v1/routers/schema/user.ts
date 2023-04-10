@@ -25,6 +25,11 @@ const UserSchema = {
     email: schema.email
   }),
 
+  askChangeEmail: Joi.object({
+    newEmail: schema.email,
+    password: schema.password
+  }),
+
   resetPassword: Joi.object({
     token: schema.tokenCode,
     newPassword: schema.password

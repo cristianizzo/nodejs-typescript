@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as moment from 'moment'
 import * as speakeasy from 'speakeasy'
+import { pick } from 'lodash'
 import { DataTypes, Sequelize } from 'sequelize'
 import { IEnumTokenType, ITokenAttribute, ITokenInstance, IUserAttribute } from '@type/db/db'
 import { assert, assertExposable } from '@helpers/errors'
@@ -28,7 +29,7 @@ export default function (sequelize: Sequelize): ITokenInstance {
       },
       clientIp: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
       },
       type: {
         type: DataTypes.ENUM(...Object.values(IEnumTokenType)),
@@ -36,7 +37,6 @@ export default function (sequelize: Sequelize): ITokenInstance {
       },
       userAgentInfo: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
       },
       deviceId: {
@@ -45,12 +45,10 @@ export default function (sequelize: Sequelize): ITokenInstance {
       },
       suspicious: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
         defaultValue: false
       },
       extra: {
         type: DataTypes.JSON,
-        allowNull: false,
         defaultValue: {}
       }
     },
@@ -66,6 +64,15 @@ export default function (sequelize: Sequelize): ITokenInstance {
     return this.update({ updatedAt: new Date(Date.now()), ...params }, tOpts)
   }
 
+  Token.prototype.filterKeys = function () {
+    const filtered = pick(this, 'id', 'clientIp', 'userAgentInfo', 'createdAt', 'updatedAt')
+
+    filtered.createdAt = moment.utc(this.createdAt).format()
+    filtered.updatedAt = moment.utc(this.updatedAt).format()
+
+    return filtered
+  }
+
   Token.findByTypeAndValueWithUser = async (type, value, tOpts) => {
     return await (Token.findOne(
       Object.assign(
@@ -78,16 +85,16 @@ export default function (sequelize: Sequelize): ITokenInstance {
     ) as Promise<ITokenAttribute & { User: IUserAttribute }>)
   }
 
-  Token.createToken = async (userId: string, value: string, type, requestInfo, extraValue = null, tOpts): Promise<ITokenAttribute> => {
-    assert(!!(userId && value && type && requestInfo.ip), 'missing parameters')
+  Token.createToken = async (userId: string, value: string, type, requestInfo = {}, extraValue = null, tOpts): Promise<ITokenAttribute> => {
+    assert(!!(userId && value && type), 'missing parameters')
 
     const rawToken: any = {
       value,
       type,
       UserId: userId,
       extraValue,
-      clientIp: requestInfo.ip,
-      userAgentInfo: requestInfo.userAgentInfo != null ?? {},
+      clientIp: requestInfo.ip ?? null,
+      userAgentInfo: requestInfo.userAgentInfo ?? null,
       deviceId: requestInfo.deviceId ?? null
     }
 
@@ -100,7 +107,7 @@ export default function (sequelize: Sequelize): ITokenInstance {
     return await Token.createToken(userId, token, IEnumTokenType.AUTH, requestInfo, null, tOpts)
   }
 
-  Token.createFor2FAEmail = async (user, requestInfo, tOpts) => {
+  Token.createFor2FAEmail = async (user, requestInfo, tOpts?) => {
     await user.removeTokensByType(IEnumTokenType.TWO_FACTOR_EMAIL_LOGIN, tOpts)
 
     const pinCode = Utils.randomDigits()

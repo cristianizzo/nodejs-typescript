@@ -6,6 +6,7 @@ import crypto from '@helpers/crypto'
 import * as moment from 'moment'
 import { pick } from 'lodash'
 import { IUserRes } from '@type/routers/res/user'
+import { ISignup } from '@type/routers/req/user'
 
 export default function (sequelize: Sequelize): IUserInstance {
   const User = sequelize.define<IUserAttribute>(
@@ -99,9 +100,8 @@ export default function (sequelize: Sequelize): IUserInstance {
   }
 
   User.prototype.filterKeys = function (): IUserRes {
-    const obj = this.toObject()
     const filtered: any = pick(
-      obj,
+      this,
       'id',
       'email',
       'firstName',
@@ -125,5 +125,11 @@ export default function (sequelize: Sequelize): IUserInstance {
     return await (User.findOne({ where: { email } }) as Promise<IUserAttribute>)
   }
 
+  const originalCreate = User.create.bind(User)
+
+  User.create = async function (rawUser: ISignup, tOpts?: ITxOpts): Promise<IUserAttribute> {
+    const password = await crypto.bcrypt.hash(rawUser.password)
+    return originalCreate(Object.assign(rawUser, { password }), tOpts)
+  }
   return User
 }

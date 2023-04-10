@@ -21,6 +21,9 @@ export const setModels = (sequelize: Sequelize) => {
   Models.UserNotification = UserNotification(sequelize)
   Models.Token = Token(sequelize)
 
+  Models.Token.belongsTo(Models.User, { constraints: true })
+  Models.User.hasMany(Models.Token, { constraints: true })
+
   Models.UserRole.belongsTo(Models.User, { constraints: true })
   Models.User.belongsTo(Models.UserRole, { constraints: true })
 
@@ -28,6 +31,6 @@ export const setModels = (sequelize: Sequelize) => {
   Models.User.hasOne(Models.UserNotification, { constraints: true })
 
   Object.keys(Models).forEach((modelName) => {
-    console.log('Model', modelName)
+    // console.log('Model', modelName)
   })
 }

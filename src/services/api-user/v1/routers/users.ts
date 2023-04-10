@@ -109,6 +109,14 @@ const UsersRouter = {
     ctx.body = await UserController.askTwoFactor(ctx.state.user, ctx.requestInfo)
   },
 
+  async askChangeEmail(ctx) {
+    const params = pick(ctx.request.body, 'newEmail', 'password')
+
+    const formattedParams = await schema.validateParams(UserSchema.askChangeEmail, params)
+
+    ctx.body = await UserController.askChangeEmail(ctx.state.user, formattedParams.password, formattedParams.newEmail, ctx.requestInfo)
+  },
+
   async enableTwoFactor(ctx: ParameterizedContext) {
     const params = pick(ctx.request.body, 'twoFaCode')
 
@@ -274,7 +282,19 @@ const UsersRouter = {
     router.post('/change-password', authed, UsersRouter.changePassword)
 
     /**
-     * @api {post} /user/ask-two-factor Ask for a two factor auth code
+     * @api {post} /user//ask-change-email Ask change user email
+     * @apiName user_AskChangeEmail
+     * @apiGroup User
+     * @apiDescription User Ask change user email
+     *
+     * @apiSampleRequest /user/ask-change-email
+     *
+     * @apiSuccess {Boolean} True
+     */
+    router.post('/ask-change-email', authed, UsersRouter.askChangeEmail)
+
+    /**
+     * @api {post} /user/ask-two-factor Ask for a two-factor auth code
      * @apiName user_ask_two_factor
      * @apiGroup User
      * @apiDescription Requests to enable two factor and for a shared secret

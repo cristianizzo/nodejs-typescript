@@ -57,5 +57,6 @@
         "@typescript-eslint/no-confusing-void-expression": "off"
       }
     }
-  ]
+  ],
+  "ignorePatterns": ["node_modules/", "test/"]
 }
