@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import { DataTypes, Sequelize } from 'sequelize'
+import { DataTypes, Sequelize, CreateOptions } from 'sequelize'
 import { IEnumTokenType, ITokenAttribute, IUserAttribute, IUserInstance } from '@type/db/db'
 import { ITxOpts } from '@type/db/transaction'
 import crypto from '@helpers/crypto'
@@ -127,7 +127,7 @@ export default function (sequelize: Sequelize): IUserInstance {
 
   const originalCreate = User.create.bind(User)
 
-  User.create = async function (rawUser: ISignup, tOpts?: ITxOpts): Promise<IUserAttribute> {
+  User.create = async function (rawUser: ISignup, tOpts?: CreateOptions): Promise<IUserAttribute> {
     const password = await crypto.bcrypt.hash(rawUser.password)
     return originalCreate(Object.assign(rawUser, { password }), tOpts)
   }
